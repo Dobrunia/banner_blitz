@@ -113,9 +113,11 @@ body {
 }
 
 .nav-item.active {
-  background: rgba(102, 126, 234, 0.2);
-  color: #667eea;
-  font-weight: 600;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  transform: translateX(5px);
 }
 
 /* Overlay */
@@ -156,9 +158,9 @@ body {
 
 .game-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  padding: 20px 0;
+  padding: 20px;
 }
 
 .reset-btn {
@@ -193,6 +195,7 @@ body {
   color: #667eea;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   backdrop-filter: blur(10px);
+  margin-left: auto;
 }
 
 /* Game Main */
@@ -601,4 +604,130 @@ body {
   .modal-content {
     border: 2px solid #333;
   }
+}
+
+/* Flags Game Styles */
+.flags-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.flags-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.flags-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 20px;
+  padding: 20px;
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.flag-item {
+  background: white;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 3px solid transparent;
+}
+
+.flag-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  border-color: #667eea;
+}
+
+.flag-item:active {
+  transform: scale(0.95);
+}
+
+.flag-img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.flags-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.flags-options .option-btn {
+  background: white;
+  border: none;
+  border-radius: 8px;
+  padding: 15px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.flags-options .option-btn:hover {
+  background: #f0f0f0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.flags-footer {
+  display: none;
+  /* Скрываем footer с кнопками */
+}
+
+.flags-question {
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  .flags-container {
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .flag-img {
+    height: 100px;
+  }
+
+  .flags-options {
+    padding: 15px;
+  }
+
+  .flags-options .option-btn {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+}
+
+/* Стили для кнопки сброса в меню */
+.reset-menu-btn {
+  font-weight: bold !important;
+  margin-top: 20px !important;
+  border: 2px solid #ff4757 !important;
 }

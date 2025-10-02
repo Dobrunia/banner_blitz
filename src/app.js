@@ -1,21 +1,21 @@
 // Main application entry point
 import './style.css';
 import { CountriesAPI } from './countries.js';
-import { GameLogic } from './gameLogic.js';
+import { GameLogic, FlagsGameLogic } from './gameLogic.js';
 import { UI } from './ui.js';
 
 class FlagQuizApp {
   constructor() {
     this.countriesAPI = new CountriesAPI();
     this.gameLogic = new GameLogic(this.countriesAPI);
+    this.flagsGameLogic = new FlagsGameLogic(this.countriesAPI);
     this.ui = new UI(this.gameLogic);
+    this.currentMode = 'flag'; // 'flag' или 'flags'
 
     this.init();
   }
 
   async init() {
-    console.log('Initializing Flag Quiz App...');
-
     // Set up event listeners
     this.setupEventListeners();
 
@@ -36,6 +36,11 @@ class FlagQuizApp {
     document.addEventListener('resetGame', () => this.resetGame());
     document.addEventListener('answerQuestion', (e) => this.answerQuestion(e.detail));
     document.addEventListener('nextQuestion', () => this.nextQuestion());
+
+    // Mode switching
+    document.addEventListener('switchToFlagMode', () => this.switchToFlagMode());
+    document.addEventListener('switchToFlagsMode', () => this.switchToFlagsMode());
+    document.addEventListener('resetAllGames', () => this.resetAllGames());
 
     // Touch events for mobile
     document.addEventListener(
@@ -69,33 +74,45 @@ class FlagQuizApp {
   }
 
   answerQuestion(selectedCountry) {
-    const result = this.gameLogic.answerQuestion(selectedCountry);
+    const gameLogic = this.currentMode === 'flags' ? this.flagsGameLogic : this.gameLogic;
+    const result = gameLogic.answerQuestion(selectedCountry);
     this.ui.showResult(result);
   }
 
   nextQuestion() {
-    const stats = this.gameLogic.getGameStats();
-
-    if (stats.isFinished) {
-      this.ui.showGameFinished(stats);
+    if (this.currentMode === 'flags') {
+      // Бесконечный режим для флагов
+      this.flagsGameLogic.nextQuestion();
     } else {
-      this.gameLogic.nextQuestion();
+      // Обычный режим для флага
+      const stats = this.gameLogic.getGameStats();
+      if (stats.isFinished) {
+        this.ui.showGameFinished(stats);
+      } else {
+        this.gameLogic.nextQuestion();
+      }
     }
   }
 
   handleGameState(state) {
-    console.log('Game state changed:', state.currentState);
-
     switch (state.currentState) {
       case 'Loading':
         this.ui.showLoading();
         break;
 
       case 'Question':
-        this.ui.showGame();
-        this.ui.updateScore(state.score);
-        if (state.currentQuestion && state.options) {
-          this.ui.displayQuestion(state.currentQuestion, state.options);
+        if (this.currentMode === 'flag') {
+          this.ui.showGame();
+          this.ui.updateScore(state.score);
+          if (state.currentQuestion && state.options) {
+            this.ui.displayQuestion(state.currentQuestion, state.options);
+          }
+        } else if (this.currentMode === 'flags') {
+          this.ui.showFlagsGame();
+          this.ui.updateFlagsScore(state.score);
+          if (state.options) {
+            this.ui.displayFlagsQuestion(state.currentQuestion, state.options);
+          }
         }
         break;
 
@@ -109,6 +126,43 @@ class FlagQuizApp {
 
       default:
         console.warn('Unknown game state:', state.currentState);
+    }
+  }
+
+  switchToFlagMode() {
+    this.currentMode = 'flag';
+    this.ui.gameLogic = this.gameLogic;
+    this.gameLogic.addListener((state) => this.handleGameState(state));
+    this.ui.setActiveNavItem(this.ui.elements.navGame);
+    this.ui.showGame();
+    this.startGame();
+  }
+
+  switchToFlagsMode() {
+    this.currentMode = 'flags';
+    this.ui.gameLogic = this.flagsGameLogic;
+    this.flagsGameLogic.addListener((state) => this.handleGameState(state));
+    this.ui.setActiveNavItem(this.ui.elements.navFlags);
+    this.ui.showFlagsGame();
+    // Запускаем игру в режиме флагов
+    this.startFlagsGame();
+  }
+
+  async startFlagsGame() {
+    this.ui.showLoading();
+    await this.flagsGameLogic.startGame();
+  }
+
+  resetAllGames() {
+    // Сбрасываем обе игры
+    this.gameLogic.resetGame();
+    this.flagsGameLogic.resetGame();
+
+    // Перезапускаем текущую игру
+    if (this.currentMode === 'flag') {
+      this.startGame();
+    } else if (this.currentMode === 'flags') {
+      this.startFlagsGame();
     }
   }
 
@@ -132,17 +186,3 @@ class FlagQuizApp {
 document.addEventListener('DOMContentLoaded', () => {
   new FlagQuizApp();
 });
-
-// Register service worker for PWA
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .then((registration) => {
-        console.log('SW registered: ', registration);
-      })
-      .catch((registrationError) => {
-        console.log('SW registration failed: ', registrationError);
-      });
-  });
-}

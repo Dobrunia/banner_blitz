@@ -7,17 +7,24 @@ export class UI {
       burger: document.getElementById('burger'),
       sidebar: document.getElementById('sidebar'),
       overlay: document.getElementById('overlay'),
-      closeSidebar: document.getElementById('close-sidebar'),
+      // closeSidebar: document.getElementById('close-sidebar'),
       navGame: document.getElementById('nav-game'),
+      navFlags: document.getElementById('nav-flags'),
+      navReset: document.getElementById('nav-reset'),
 
       // Game elements
       gameScreen: document.getElementById('game-screen'),
+      flagsScreen: document.getElementById('flags-screen'),
       loadingScreen: document.getElementById('loading-screen'),
-      resetBtn: document.getElementById('reset-btn'),
       score: document.getElementById('score'),
+      flagsScore: document.getElementById('flags-score'),
       flag: document.getElementById('flag'),
       question: document.getElementById('question'),
       options: document.getElementById('options'),
+      // Flags game elements
+      flagsQuestion: document.getElementById('flags-question'),
+      flagsContainer: document.getElementById('flags-container'),
+      flagsOptions: document.getElementById('flags-options'),
 
       // Modal
       modal: document.getElementById('modal'),
@@ -39,11 +46,21 @@ export class UI {
   // Sidebar management
   setupSidebar() {
     this.elements.burger.addEventListener('click', () => this.toggleSidebar());
-    this.elements.closeSidebar.addEventListener('click', () => this.closeSidebar());
+    // this.elements.closeSidebar.addEventListener('click', () => this.closeSidebar());
     this.elements.overlay.addEventListener('click', () => this.closeSidebar());
     this.elements.navGame.addEventListener('click', () => {
+      this.setActiveNavItem(this.elements.navGame);
       this.closeSidebar();
-      this.showGame();
+      this.dispatchEvent('switchToFlagMode');
+    });
+    this.elements.navFlags.addEventListener('click', () => {
+      this.setActiveNavItem(this.elements.navFlags);
+      this.closeSidebar();
+      this.dispatchEvent('switchToFlagsMode');
+    });
+    this.elements.navReset.addEventListener('click', () => {
+      this.closeSidebar();
+      this.dispatchEvent('resetAllGames');
     });
   }
 
@@ -69,15 +86,29 @@ export class UI {
     document.body.style.overflow = '';
   }
 
+  setActiveNavItem(activeItem) {
+    // Убираем active со всех кнопок
+    this.elements.navGame.classList.remove('active');
+    this.elements.navFlags.classList.remove('active');
+
+    // Добавляем active к выбранной кнопке
+    activeItem.classList.add('active');
+  }
+
   // Game UI
   setupGame() {
-    this.elements.resetBtn.addEventListener('click', () => {
-      this.dispatchEvent('resetGame');
-    });
+    // Обработчики кнопок перенесены в меню
   }
 
   showGame() {
     this.elements.gameScreen.style.display = 'flex';
+    this.elements.flagsScreen.style.display = 'none';
+    this.elements.loadingScreen.style.display = 'none';
+  }
+
+  showFlagsGame() {
+    this.elements.flagsScreen.style.display = 'flex';
+    this.elements.gameScreen.style.display = 'none';
     this.elements.loadingScreen.style.display = 'none';
   }
 
@@ -226,10 +257,6 @@ export class UI {
         return;
       }
 
-      flagElement.onload = () => {
-        console.log(`Flag loaded successfully for ${question.name} (attempt ${attempts})`);
-      };
-
       flagElement.onerror = () => {
         console.warn(`Failed to load flag for ${question.name} (attempt ${attempts})`);
         if (attempts < maxAttempts) {
@@ -256,5 +283,58 @@ export class UI {
     flagElement.style.textAlign = 'center';
     flagElement.style.padding = '20px';
     flagElement.innerHTML = `Флаг недоступен<br><small>${countryName}</small>`;
+  }
+
+  // Flags game methods
+  displayFlagsQuestion(question, options) {
+    if (!question || !options || options.length !== 4) {
+      console.error('Invalid flags question data:', question, options);
+      return;
+    }
+
+    // Set question text - показываем название страны
+    this.elements.flagsQuestion.textContent = question.name;
+
+    // Clear and create flags
+    this.elements.flagsContainer.innerHTML = '';
+
+    options.forEach((option, index) => {
+      const flagDiv = document.createElement('div');
+      flagDiv.className = 'flag-item';
+      flagDiv.dataset.country = option.name;
+
+      const flagImg = document.createElement('img');
+      flagImg.className = 'flag-img';
+      flagImg.src = option.flag_url;
+      flagImg.alt = `Флаг ${option.name}`;
+
+      // Add error handling for flag loading
+      flagImg.onerror = () => {
+        console.warn(`Failed to load flag for ${option.name}`);
+        flagImg.style.display = 'none';
+      };
+
+      flagImg.onload = () => {
+        flagImg.style.display = 'block';
+      };
+
+      flagDiv.appendChild(flagImg);
+
+      // Добавляем обработчик клика на флаг
+      flagDiv.addEventListener('click', () => {
+        // Убираем проверку состояния - клик должен работать всегда
+        this.dispatchEvent('answerQuestion', option);
+      });
+
+      this.elements.flagsContainer.appendChild(flagDiv);
+    });
+
+    // Убираем кнопки с названиями - пользователь выбирает флаги напрямую
+    this.elements.flagsOptions.innerHTML = '';
+  }
+
+  updateFlagsScore(score) {
+    // Показываем правильные ответы (зеленым) / всего попыток
+    this.elements.flagsScore.innerHTML = `<span style="color: #4CAF50;">${score.correct}</span>/<span>${score.total}</span>`;
   }
 }

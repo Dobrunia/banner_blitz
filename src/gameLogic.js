@@ -154,3 +154,153 @@ export class GameLogic {
     };
   }
 }
+
+// Новый класс для режима с флагами
+export class FlagsGameLogic {
+  constructor(countriesAPI) {
+    this.countriesAPI = countriesAPI;
+    this.state = {
+      currentState: 'Idle',
+      score: { correct: 0, incorrect: 0, total: 0 },
+      currentQuestion: null,
+      options: [],
+      correctAnswer: null,
+      isAnswered: false,
+    };
+
+    this.listeners = [];
+  }
+
+  setState(newState) {
+    this.state.currentState = newState;
+    this.notifyListeners();
+  }
+
+  getState() {
+    return { ...this.state };
+  }
+
+  addListener(callback) {
+    this.listeners.push(callback);
+  }
+
+  removeListener(callback) {
+    this.listeners = this.listeners.filter((listener) => listener !== callback);
+  }
+
+  notifyListeners() {
+    this.listeners.forEach((callback) => callback(this.getState()));
+  }
+
+  async startGame() {
+    this.setState('Loading');
+
+    try {
+      if (!this.countriesAPI.isReady()) {
+        await this.countriesAPI.loadCountries();
+      }
+
+      this.resetScore();
+      await this.generateQuestion();
+    } catch (error) {
+      console.error('Error starting flags game:', error);
+      this.setState('Idle');
+      throw error;
+    }
+  }
+
+  resetGame() {
+    this.resetScore();
+    this.state.currentQuestion = null;
+    this.state.options = [];
+    this.state.correctAnswer = null;
+    this.state.isAnswered = false;
+    this.setState('Loading');
+  }
+
+  resetScore() {
+    this.state.score = { correct: 0, incorrect: 0, total: 0 };
+  }
+
+  async generateQuestion() {
+    try {
+      // Получаем 4 случайные страны
+      const countries = this.countriesAPI.getRandomCountries(4);
+
+      // Выбираем одну как правильный ответ
+      const correctCountry = countries[0];
+
+      // Перемешиваем массив флагов, чтобы правильный был в случайном месте
+      const shuffledOptions = [...countries].sort(() => Math.random() - 0.5);
+
+      this.state.options = shuffledOptions;
+      this.state.currentQuestion = correctCountry;
+      this.state.correctAnswer = correctCountry;
+      this.state.isAnswered = false;
+
+      this.setState('Question');
+    } catch (error) {
+      console.error('Error generating flags question:', error);
+      throw error;
+    }
+  }
+
+  answerQuestion(selectedCountry) {
+    if (this.state.isAnswered || !this.state.correctAnswer) return;
+
+    this.state.isAnswered = true;
+    this.state.score.total++;
+
+    const isCorrect = selectedCountry.name === this.state.correctAnswer.name;
+
+    if (isCorrect) {
+      this.state.score.correct++;
+    } else {
+      this.state.score.incorrect++;
+    }
+
+    this.setState('Result');
+    this.notifyListeners();
+
+    return {
+      isCorrect,
+      correctAnswer: this.state.correctAnswer,
+      selectedAnswer: selectedCountry,
+    };
+  }
+
+  nextQuestion() {
+    // Бесконечный режим - всегда генерируем новый вопрос
+    this.generateQuestion();
+    return true;
+  }
+
+  getScore() {
+    return { ...this.state.score };
+  }
+
+  getCurrentQuestion() {
+    return this.state.currentQuestion;
+  }
+
+  getOptions() {
+    return [...this.state.options];
+  }
+
+  isGameFinished() {
+    return this.state.score.total >= this.countriesAPI.getCountries().length;
+  }
+
+  getGameStats() {
+    const totalCountries = this.countriesAPI.getCountries().length;
+    return {
+      score: this.getScore(),
+      totalCountries,
+      percentage:
+        this.state.score.total > 0
+          ? Math.round((this.state.score.correct / this.state.score.total) * 100)
+          : 0,
+      isFinished: this.isGameFinished(),
+    };
+  }
+}
