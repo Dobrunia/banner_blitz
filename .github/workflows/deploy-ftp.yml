@@ -31,26 +31,27 @@ jobs:
             - name: Deploy to FTP
               uses: SamKirkland/FTP-Deploy-Action@v4.3.4
               with:
-                  server: ${{ secrets.FTP_SERVER }}
-                  username: ${{ secrets.FTP_USERNAME }}
-                  password: ${{ secrets.FTP_PASSWORD }}
-                  local-dir: ./dist/
-                  server-dir: ./
-                  exclude: |
-                      **/.git*
-                      **/.git*/**
-                      **/node_modules/**
-                      **/.env
-                      **/.env.*
-                      **/README.md
-                      **/.github/**
-                      **/src/**
-                      **/public/**
-                      **/index.html
-                      **/vite.config.js
-                      **/package.json
-                      **/package-lock.json
-                      **/capacitor.config.json
-                      **/.gitignore
-                      **/tsconfig.json
-                      **/tsconfig.node.json
+                server: ${{ secrets.FTP_SERVER }}
+                username: ${{ secrets.FTP_USERNAME }}
+                password: ${{ secrets.FTP_PASSWORD }}
+                local-dir: ./dist/
+                server-dir: ./
+                force-upload: true
+                exclude: |
+                  **/.git*
+                  **/.git*/**
+                  **/node_modules/**
+                  **/.env
+                  **/.env.*
+                  **/README.md
+                  **/.github/**
+                  **/src/**
+                  **/public/**
+                  **/index.html
+                  **/vite.config.js
+                  **/package.json
+                  **/package-lock.json
+                  **/capacitor.config.json
+                  **/.gitignore
+                  **/tsconfig.json
+                  **/tsconfig.node.json

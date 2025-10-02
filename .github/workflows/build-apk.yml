@@ -3,8 +3,12 @@ name: Build APK and Release
 on:
   push:
     branches: [main, master]
+    paths:
+      - "package.json"
   pull_request:
     branches: [main, master]
+    paths:
+      - "package.json"
   workflow_dispatch:
 
 permissions:
@@ -19,6 +23,39 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # Нужно для сравнения с предыдущим коммитом
+
+      - name: Check if version changed
+        id: version-check
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Manual trigger - building APK"
+            exit 0
+          fi
+
+          # Получаем текущую версию
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+
+          # Получаем предыдущую версию
+          PREVIOUS_VERSION=$(git show HEAD~1:package.json | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version" 2>/dev/null || echo "0.0.0")
+          echo "Previous version: $PREVIOUS_VERSION"
+
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION - building APK"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Version unchanged ($CURRENT_VERSION) - skipping APK build"
+          fi
+
+      - name: Exit if no version change
+        if: steps.version-check.outputs.changed == 'false'
+        run: |
+          echo "No version change detected. Exiting workflow."
+          exit 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
