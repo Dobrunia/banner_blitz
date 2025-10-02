@@ -42,12 +42,9 @@ body {
 
 .burger-btn:hover {
   background: rgba(255, 255, 255, 1);
-  transform: scale(1.05);
 }
 
-.burger-btn:active {
-  transform: scale(0.95);
-}
+.burger-btn:active {}
 
 /* Sidebar */
 .sidebar {
@@ -117,7 +114,6 @@ body {
   color: white;
   font-weight: 700;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  transform: translateX(5px);
 }
 
 /* Overlay */
@@ -178,13 +174,10 @@ body {
 
 .reset-btn:hover {
   background: rgba(255, 255, 255, 1);
-  transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
-.reset-btn:active {
-  transform: translateY(0);
-}
+.reset-btn:active {}
 
 .score {
   background: rgba(255, 255, 255, 0.9);
@@ -257,7 +250,7 @@ body {
 
 .option-btn {
   background: rgba(255, 255, 255, 0.9);
-  border: none;
+  border: 2px solid transparent;
   padding: 20px;
   border-radius: 15px;
   font-size: 16px;
@@ -275,13 +268,10 @@ body {
 
 .option-btn:hover {
   background: rgba(255, 255, 255, 1);
-  transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
-.option-btn:active {
-  transform: translateY(0);
-}
+.option-btn:active {}
 
 .option-btn:disabled {
   opacity: 0.6;
@@ -330,140 +320,7 @@ body {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Modal */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  visibility: hidden;
-  transition: all 0.3s ease;
-}
 
-.modal.show {
-  opacity: 1;
-  visibility: visible;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 20px;
-  padding: 40px;
-  max-width: 400px;
-  width: 90%;
-  text-align: center;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  transform: scale(0.8);
-  transition: transform 0.3s ease;
-}
-
-.modal.show .modal-content {
-  transform: scale(1);
-}
-
-.modal-content h3 {
-  font-size: 26px;
-  margin-bottom: 20px;
-  color: #333;
-  font-weight: 700;
-}
-
-.modal-content h3.correct {
-  color: #4CAF50;
-  font-weight: 800;
-  /* Green */
-}
-
-.modal-content h3.incorrect {
-  color: #F44336;
-  font-weight: 800;
-  /* Red */
-}
-
-.modal-content p {
-  font-size: 18px;
-  margin-bottom: 30px;
-  color: #333;
-  line-height: 1.5;
-  font-weight: 500;
-}
-
-.modal-close {
-  background: #667eea;
-  color: white;
-  border: none;
-  padding: 15px 30px;
-  border-radius: 25px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.modal-close:hover {
-  background: #5a6fd8;
-  transform: translateY(-2px);
-}
-
-/* Error Message */
-.error-message {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  z-index: 3000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.error-content {
-  background: white;
-  border-radius: 20px;
-  padding: 40px;
-  max-width: 400px;
-  width: 90%;
-  text-align: center;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.error-content h3 {
-  color: #e74c3c;
-  margin-bottom: 20px;
-  font-size: 24px;
-}
-
-.error-content p {
-  color: #666;
-  margin-bottom: 30px;
-  line-height: 1.5;
-}
-
-.error-content button {
-  background: #e74c3c;
-  color: white;
-  border: none;
-  padding: 15px 30px;
-  border-radius: 25px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.error-content button:hover {
-  background: #c0392b;
-  transform: translateY(-2px);
-}
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -472,9 +329,7 @@ body {
     left: -80vw;
   }
 
-  .sidebar.open {
-    transform: translateX(80vw);
-  }
+  .sidebar.open {}
 
   .game-screen {
     padding: 15px;
@@ -499,13 +354,6 @@ body {
     font-size: 14px;
   }
 
-  .modal-content {
-    padding: 30px 20px;
-  }
-
-  .modal-content h3 {
-    font-size: 20px;
-  }
 }
 
 @media (max-width: 480px) {
@@ -600,10 +448,6 @@ body {
   .score {
     border: 2px solid #333;
   }
-
-  .modal-content {
-    border: 2px solid #333;
-  }
 }
 
 /* Flags Game Styles */
@@ -641,18 +485,15 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 3px solid transparent;
+  border: 4px solid transparent;
 }
 
 .flag-item:hover {
-  transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   border-color: #667eea;
 }
 
-.flag-item:active {
-  transform: scale(0.95);
-}
+.flag-item:active {}
 
 .flag-img {
   width: 100%;
@@ -685,7 +526,6 @@ body {
 
 .flags-options .option-btn:hover {
   background: #f0f0f0;
-  transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
@@ -732,31 +572,23 @@ body {
   border: 2px solid #ff4757 !important;
 }
 
-/* Кнопка "Следующий вопрос" для режима флагов */
-.next-question-btn {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white;
-  border: none;
-  padding: 15px 30px;
-  border-radius: 25px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-  transition: all 0.3s ease;
-  z-index: 1000;
+
+/* Стили для подсветки кнопок ответов */
+.option-btn.correct-answer {
+  background: linear-gradient(135deg, #4ade80, #22c55e) !important;
+  color: white !important;
+  border: 2px solid #16a34a !important;
 }
 
-.next-question-btn:hover {
-  background: linear-gradient(135deg, #5a6fd8, #6a4190);
-  transform: translateX(-50%) translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+.option-btn.incorrect-answer {
+  background: linear-gradient(135deg, #f87171, #ef4444) !important;
+  color: white !important;
+  border: 2px solid #dc2626 !important;
 }
 
-.next-question-btn:active {
-  transform: translateX(-50%) translateY(0);
+.option-btn.other-answer {
+  background: linear-gradient(135deg, #9ca3af, #6b7280) !important;
+  color: white !important;
+  border: 2px solid #4b5563 !important;
+  opacity: 0.6 !important;
 }

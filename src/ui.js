@@ -4,6 +4,7 @@ export class UI {
     this.gameLogic = gameLogic;
     this.currentMode = 'flag';
     this.isAnswered = false;
+    this.isAnswerShown = false;
     this.elements = {
       // Sidebar
       burger: document.getElementById('burger'),
@@ -131,6 +132,9 @@ export class UI {
       return;
     }
 
+    // Сбрасываем флаг показа ответа
+    this.isAnswerShown = false;
+
     // Set flag image with fallback handling
     this.elements.flag.alt = `Флаг ${question.name}`;
     this.elements.flag.style.display = 'block';
@@ -148,6 +152,12 @@ export class UI {
       button.dataset.country = option.name;
 
       button.addEventListener('click', () => {
+        // Если ответ уже показан - переходим к следующему вопросу
+        if (this.isAnswerShown) {
+          this.dispatchEvent('nextQuestion');
+          return;
+        }
+
         // Only allow answering if game is in Question state
         if (this.gameLogic && this.gameLogic.getState().currentState === 'Question') {
           this.dispatchEvent('answerQuestion', option);
@@ -160,28 +170,14 @@ export class UI {
 
   showResult(result) {
     const { isCorrect, correctAnswer, selectedAnswer } = result;
+    this.isAnswerShown = true;
 
     if (this.currentMode === 'flags') {
-      // Для режима флагов - подсвечиваем флаги и показываем кнопку
+      // Для режима флагов - подсвечиваем флаги
       this.highlightFlags(result);
-      this.showNextButton();
     } else {
-      // Для обычного режима - показываем модальное окно
-      this.elements.modalTitle.classList.remove('correct', 'incorrect');
-
-      this.elements.modalTitle.textContent = isCorrect ? 'Правильно!' : 'Неправильно!';
-      this.elements.modalText.textContent = isCorrect
-        ? `Отлично! Это действительно ${correctAnswer.name}.`
-        : `Правильный ответ: ${correctAnswer.name}.`;
-
-      // Add color class based on result
-      if (isCorrect) {
-        this.elements.modalTitle.classList.add('correct');
-      } else {
-        this.elements.modalTitle.classList.add('incorrect');
-      }
-
-      this.elements.modal.classList.add('show');
+      // Для обычного режима - подсвечиваем кнопки ответов
+      this.highlightAnswerButtons(result);
     }
   }
 
@@ -302,7 +298,6 @@ export class UI {
 
     // Сбрасываем состояние ответа
     this.isAnswered = false;
-    this.hideNextButton();
 
     // Set question text - показываем название страны
     this.elements.flagsQuestion.textContent = question.name;
@@ -337,6 +332,9 @@ export class UI {
         if (!this.isAnswered) {
           this.isAnswered = true;
           this.dispatchEvent('answerQuestion', option);
+        } else {
+          // Если ответ уже показан - переходим к следующему вопросу
+          this.dispatchEvent('nextQuestion');
         }
       });
 
@@ -363,12 +361,10 @@ export class UI {
         // Правильный ответ - зеленый
         flagItem.style.border = '4px solid #4CAF50';
         flagItem.style.boxShadow = '0 0 20px rgba(76, 175, 80, 0.5)';
-        flagItem.style.transform = 'scale(1.05)';
       } else if (countryName === selectedAnswer.name && !isCorrect) {
         // Выбранный неправильный ответ - красный
         flagItem.style.border = '4px solid #f44336';
         flagItem.style.boxShadow = '0 0 20px rgba(244, 67, 54, 0.5)';
-        flagItem.style.transform = 'scale(1.05)';
       } else {
         // Остальные флаги - серый
         flagItem.style.border = '4px solid #9e9e9e';
@@ -378,27 +374,29 @@ export class UI {
     });
   }
 
-  showNextButton() {
-    // Создаем кнопку "Следующий вопрос" если её нет
-    let nextBtn = document.getElementById('next-question-btn');
-    if (!nextBtn) {
-      nextBtn = document.createElement('button');
-      nextBtn.id = 'next-question-btn';
-      nextBtn.className = 'next-question-btn';
-      nextBtn.textContent = 'Следующий вопрос';
-      nextBtn.addEventListener('click', () => {
-        this.hideNextButton();
-        this.dispatchEvent('nextQuestion');
-      });
-      this.elements.flagsScreen.appendChild(nextBtn);
-    }
-    nextBtn.style.display = 'block';
-  }
+  highlightAnswerButtons(result) {
+    const { isCorrect, correctAnswer, selectedAnswer } = result;
+    const buttons = document.querySelectorAll('.option-btn');
 
-  hideNextButton() {
-    const nextBtn = document.getElementById('next-question-btn');
-    if (nextBtn) {
-      nextBtn.style.display = 'none';
-    }
+    buttons.forEach((button) => {
+      const countryName = button.dataset.country;
+
+      // Сбрасываем стили
+      button.classList.remove('correct-answer', 'incorrect-answer', 'other-answer');
+
+      if (countryName === correctAnswer.name) {
+        // Правильный ответ - зеленый
+        button.classList.add('correct-answer');
+      } else if (countryName === selectedAnswer.name) {
+        // Выбранный неправильный ответ - красный
+        button.classList.add('incorrect-answer');
+      } else {
+        // Остальные кнопки - серый
+        button.classList.add('other-answer');
+      }
+
+      // Делаем кнопки кликабельными для следующего вопроса
+      button.style.cursor = 'pointer';
+    });
   }
 }
