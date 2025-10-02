@@ -8,13 +8,13 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write  # Для создания release
-  packages: write  # Опционально, для gh CLI
+  contents: write # Для создания release
+  packages: write # Опционально, для gh CLI
 
 jobs:
   build-apk:
     runs-on: ubuntu-latest
-    timeout-minutes: 30  # Достаточно с кэшем
+    timeout-minutes: 30 # Достаточно с кэшем
 
     steps:
       - name: Checkout code
@@ -80,6 +80,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG="v$(date +%Y%m%d)"
+          TAG="v$(date +%Y%m%d-%H%M%S)"
+          echo "Creating release with tag: $TAG"
           gh release create "$TAG" --title "Release $TAG" --notes "Auto-built debug APK for Flag Quiz" --draft=false
           gh release upload "$TAG" flag-quiz-debug.apk --clobber

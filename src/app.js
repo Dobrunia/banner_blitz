@@ -131,6 +131,7 @@ class FlagQuizApp {
 
   switchToFlagMode() {
     this.currentMode = 'flag';
+    this.ui.currentMode = 'flag';
     this.ui.gameLogic = this.gameLogic;
     this.gameLogic.addListener((state) => this.handleGameState(state));
     this.ui.setActiveNavItem(this.ui.elements.navGame);
@@ -140,6 +141,7 @@ class FlagQuizApp {
 
   switchToFlagsMode() {
     this.currentMode = 'flags';
+    this.ui.currentMode = 'flags';
     this.ui.gameLogic = this.flagsGameLogic;
     this.flagsGameLogic.addListener((state) => this.handleGameState(state));
     this.ui.setActiveNavItem(this.ui.elements.navFlags);
