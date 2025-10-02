@@ -19,14 +19,28 @@ export class CountriesAPI {
         return this.countries;
       }
 
-      // Fetch from API
+      // Check network connectivity
+      if (!navigator.onLine) {
+        console.log('No network connection, using fallback data');
+        this.countries = this.getFallbackCountries();
+        this.isLoaded = true;
+        return this.countries;
+      }
+
+      // Fetch from API with timeout
       console.log('Loading countries from API...');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const response = await fetch(API_URL, {
         method: 'GET',
         headers: {
           Accept: 'application/json',
         },
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         console.error(`API Error: ${response.status} ${response.statusText}`);
@@ -35,13 +49,13 @@ export class CountriesAPI {
 
       const data = await response.json();
 
-      // Filter and map countries
+      // Filter and map countries with improved flag URLs
       this.countries = data
         .filter((country) => country.unMember !== false) // Include UN members and non-members
         .map((country) => ({
           name: country.name.common,
-          flag_url: country.flags.png,
-          flag_svg: country.flags.svg,
+          flag_url: this.getOptimizedFlagUrl(country.flags.png),
+          flag_svg: this.getOptimizedFlagUrl(country.flags.svg),
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -138,109 +152,48 @@ export class CountriesAPI {
     return this.isLoaded && this.countries.length > 0;
   }
 
+  getOptimizedFlagUrl(originalUrl) {
+    if (!originalUrl) return null;
+
+    // Try to use a more reliable CDN or add fallback parameters
+    if (originalUrl.includes('flagcdn.com')) {
+      // Add cache-busting parameter to avoid stale images
+      const separator = originalUrl.includes('?') ? '&' : '?';
+      return `${originalUrl}${separator}v=${Date.now()}`;
+    }
+
+    return originalUrl;
+  }
+
   getFallbackCountries() {
-    // Fallback data with popular countries
-    return [
-      {
-        name: 'Россия',
-        flag_url: 'https://flagcdn.com/w320/ru.png',
-        flag_svg: 'https://flagcdn.com/ru.svg',
-      },
-      {
-        name: 'США',
-        flag_url: 'https://flagcdn.com/w320/us.png',
-        flag_svg: 'https://flagcdn.com/us.svg',
-      },
-      {
-        name: 'Китай',
-        flag_url: 'https://flagcdn.com/w320/cn.png',
-        flag_svg: 'https://flagcdn.com/cn.svg',
-      },
-      {
-        name: 'Германия',
-        flag_url: 'https://flagcdn.com/w320/de.png',
-        flag_svg: 'https://flagcdn.com/de.svg',
-      },
-      {
-        name: 'Франция',
-        flag_url: 'https://flagcdn.com/w320/fr.png',
-        flag_svg: 'https://flagcdn.com/fr.svg',
-      },
-      {
-        name: 'Великобритания',
-        flag_url: 'https://flagcdn.com/w320/gb.png',
-        flag_svg: 'https://flagcdn.com/gb.svg',
-      },
-      {
-        name: 'Япония',
-        flag_url: 'https://flagcdn.com/w320/jp.png',
-        flag_svg: 'https://flagcdn.com/jp.svg',
-      },
-      {
-        name: 'Бразилия',
-        flag_url: 'https://flagcdn.com/w320/br.png',
-        flag_svg: 'https://flagcdn.com/br.svg',
-      },
-      {
-        name: 'Индия',
-        flag_url: 'https://flagcdn.com/w320/in.png',
-        flag_svg: 'https://flagcdn.com/in.svg',
-      },
-      {
-        name: 'Канада',
-        flag_url: 'https://flagcdn.com/w320/ca.png',
-        flag_svg: 'https://flagcdn.com/ca.svg',
-      },
-      {
-        name: 'Австралия',
-        flag_url: 'https://flagcdn.com/w320/au.png',
-        flag_svg: 'https://flagcdn.com/au.svg',
-      },
-      {
-        name: 'Италия',
-        flag_url: 'https://flagcdn.com/w320/it.png',
-        flag_svg: 'https://flagcdn.com/it.svg',
-      },
-      {
-        name: 'Испания',
-        flag_url: 'https://flagcdn.com/w320/es.png',
-        flag_svg: 'https://flagcdn.com/es.svg',
-      },
-      {
-        name: 'Южная Корея',
-        flag_url: 'https://flagcdn.com/w320/kr.png',
-        flag_svg: 'https://flagcdn.com/kr.svg',
-      },
-      {
-        name: 'Мексика',
-        flag_url: 'https://flagcdn.com/w320/mx.png',
-        flag_svg: 'https://flagcdn.com/mx.svg',
-      },
-      {
-        name: 'Нидерланды',
-        flag_url: 'https://flagcdn.com/w320/nl.png',
-        flag_svg: 'https://flagcdn.com/nl.svg',
-      },
-      {
-        name: 'Швеция',
-        flag_url: 'https://flagcdn.com/w320/se.png',
-        flag_svg: 'https://flagcdn.com/se.svg',
-      },
-      {
-        name: 'Норвегия',
-        flag_url: 'https://flagcdn.com/w320/no.png',
-        flag_svg: 'https://flagcdn.com/no.svg',
-      },
-      {
-        name: 'Швейцария',
-        flag_url: 'https://flagcdn.com/w320/ch.png',
-        flag_svg: 'https://flagcdn.com/ch.svg',
-      },
-      {
-        name: 'Польша',
-        flag_url: 'https://flagcdn.com/w320/pl.png',
-        flag_svg: 'https://flagcdn.com/pl.svg',
-      },
+    // Fallback data with popular countries - using multiple CDN options
+    const countries = [
+      { name: 'Россия', code: 'ru' },
+      { name: 'США', code: 'us' },
+      { name: 'Китай', code: 'cn' },
+      { name: 'Германия', code: 'de' },
+      { name: 'Франция', code: 'fr' },
+      { name: 'Великобритания', code: 'gb' },
+      { name: 'Япония', code: 'jp' },
+      { name: 'Бразилия', code: 'br' },
+      { name: 'Индия', code: 'in' },
+      { name: 'Канада', code: 'ca' },
+      { name: 'Австралия', code: 'au' },
+      { name: 'Италия', code: 'it' },
+      { name: 'Испания', code: 'es' },
+      { name: 'Южная Корея', code: 'kr' },
+      { name: 'Мексика', code: 'mx' },
+      { name: 'Нидерланды', code: 'nl' },
+      { name: 'Швеция', code: 'se' },
+      { name: 'Норвегия', code: 'no' },
+      { name: 'Швейцария', code: 'ch' },
+      { name: 'Польша', code: 'pl' },
     ];
+
+    return countries.map((country) => ({
+      name: country.name,
+      flag_url: `https://flagcdn.com/w320/${country.code}.png`,
+      flag_svg: `https://flagcdn.com/${country.code}.svg`,
+    }));
   }
 }

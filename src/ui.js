@@ -98,19 +98,12 @@ export class UI {
       return;
     }
 
-    // Set flag image
-    this.elements.flag.src = question.flag_url;
+    // Set flag image with fallback handling
     this.elements.flag.alt = `Флаг ${question.name}`;
+    this.elements.flag.style.display = 'block';
 
-    // Add error handling for flag loading
-    this.elements.flag.onerror = () => {
-      console.warn(`Failed to load flag for ${question.name}`);
-      this.elements.flag.style.display = 'none';
-    };
-
-    this.elements.flag.onload = () => {
-      this.elements.flag.style.display = 'block';
-    };
+    // Try to load the flag with multiple fallback strategies
+    this.loadFlagWithFallback(question);
 
     // Clear and create options
     this.elements.options.innerHTML = '';
@@ -210,5 +203,58 @@ export class UI {
 
   setHTML(element, html) {
     if (element) element.innerHTML = html;
+  }
+
+  // Flag loading with fallback strategies
+  loadFlagWithFallback(question) {
+    const flagElement = this.elements.flag;
+    let attempts = 0;
+    const maxAttempts = 3;
+
+    const tryLoadFlag = () => {
+      attempts++;
+
+      if (attempts === 1) {
+        // First attempt: original URL
+        flagElement.src = question.flag_url;
+      } else if (attempts === 2) {
+        // Second attempt: try SVG version if available
+        flagElement.src = question.flag_svg || question.flag_url;
+      } else if (attempts === 3) {
+        // Third attempt: show placeholder with country name
+        this.showFlagPlaceholder(question.name);
+        return;
+      }
+
+      flagElement.onload = () => {
+        console.log(`Flag loaded successfully for ${question.name} (attempt ${attempts})`);
+      };
+
+      flagElement.onerror = () => {
+        console.warn(`Failed to load flag for ${question.name} (attempt ${attempts})`);
+        if (attempts < maxAttempts) {
+          setTimeout(tryLoadFlag, 100); // Small delay before retry
+        } else {
+          this.showFlagPlaceholder(question.name);
+        }
+      };
+    };
+
+    tryLoadFlag();
+  }
+
+  showFlagPlaceholder(countryName) {
+    const flagElement = this.elements.flag;
+    flagElement.style.display = 'flex';
+    flagElement.style.alignItems = 'center';
+    flagElement.style.justifyContent = 'center';
+    flagElement.style.backgroundColor = '#f0f0f0';
+    flagElement.style.border = '2px dashed #ccc';
+    flagElement.style.color = '#666';
+    flagElement.style.fontSize = '18px';
+    flagElement.style.fontWeight = 'bold';
+    flagElement.style.textAlign = 'center';
+    flagElement.style.padding = '20px';
+    flagElement.innerHTML = `Флаг недоступен<br><small>${countryName}</small>`;
   }
 }
