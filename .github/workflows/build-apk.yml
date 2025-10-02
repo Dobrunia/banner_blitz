@@ -27,6 +27,11 @@ jobs:
       - name: Build web app
         run: npm run build
 
+      - name: Verify build output
+        run: |
+          ls -la dist/
+          echo "Build completed, dist folder contents:"
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -38,6 +43,9 @@ jobs:
 
       - name: Copy web assets to Android
         run: npx cap copy
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
 
       - name: Build APK
         run: |
