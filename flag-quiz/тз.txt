@@ -1,0 +1,83 @@
+План разработки мобильной игры-викторины "Угадай флаг" как PWA с нативными билдами (APK/IPA)
+План под PWA (Progressive Web App), сохранив всю логику игры: боковая панель с бургер-меню, вкладка "Игра", флаги из API, счётчик, варианты ответов, случайность и т.д. PWA — это веб-приложение, которое выглядит и работает как нативное на Android/iOS (оффлайн, installable на home screen, push-уведомления опционально). Для получения APK (Android) и IPA (iOS) используем Capacitor (hybrid wrapper от Ionic): он берёт веб-билд (из Vite) и пакует в нативные файлы. Это позволяет деплой в Google Play/App Store, сохраняя PWA-фичи (оффлайн через Service Worker). Для флагов и имён стран — тот же бесплатный REST Countries API — возвращает JSON с названиями (name.common) и URL на PNG-флаг (flags.png). API бесплатный, без ключей; rate-limit не жёсткий (рекомендуется кэшировать локально для оффлайн через Service Worker). Если нужно SVG — используй flags.svg из API.
+Для билда и разработки используем Vite (современный bundler/dev server: быстрый hot-reload, оптимизация ассетов, встроенная поддержка PWA). Vite упрощает dev (npm run dev), билд (npm run build) и preview (npm run preview). Workbox интегрируется через vite-plugin-pwa для автоматизации Service Worker. Capacitor добавляется поверх для нативных APK/IPA.
+План разделён по пунктам, как в оригинале, с подпуктиами. Общая оценка для джуна: 2-3 недели (1 неделя на core-логику, 4-6 дней на UI/PWA-фичи, 3-5 дней на Capacitor/нативный билд + polish). Начни с npm run dev для локального сервера для тестов, потом деплой.
+1. Кросс-компиляция на Android и iOS
+Цель: Веб-приложение с PWA-фичами, упакованное в нативные APK (Android) и IPA (iOS) для stores. Получаем полноценные файлы для дистрибуции.
+Инструменты:
+
+Vite (bundler/dev server): Для быстрого dev, bundling JS/CSS, HMR (hot module replacement).
+Workbox (от Google): Для Service Worker (кэш API, оффлайн); интегрируется через vite-plugin-pwa.
+Manifest.json: Для иконок, splash screen и установки на home screen (работает в PWA и нативно).
+Capacitor (hybrid bridge): Пакует веб-билд в нативные APK/IPA; поддержка тач, storage, оффлайн.
+
+Шаги настройки:
+
+Создай проект: npm create vite@latest flag-quiz -- --template vanilla (vanilla JS шаблон), cd flag-quiz, npm install.
+Добавь PWA: npm i -D vite-plugin-pwa, в vite.config.js: import { VitePWA } from 'vite-plugin-pwa'; export default { plugins: [VitePWA({ registerType: 'autoUpdate', workbox: { globPatterns: ['**/*.{js,css,html,ico,png,svg}'] } })] }.
+Manifest.json (автогенерируется vite-plugin-pwa, или вручную в public/): { "name": "Flag Quiz", "short_name": "FlagQuiz", "start_url": "/", "display": "standalone", "background_color": "#fff", "theme_color": "#000", "icons": [{ "src": "icon-192.png", "sizes": "192x192", "type": "image/png" }] }. Добавь <link rel="manifest"> в <head> index.html.
+Service Worker: Автоматически через vite-plugin-pwa (sw.js генерируется: workbox.routing.registerRoute(///, new workbox.strategies.CacheFirst());).
+Добавь Capacitor: npm i @capacitor/core @capacitor/cli, npx cap init (appId: com.flagquiz.app, name: Flag Quiz). npm i @capacitor/android @capacitor/ios.
+Билд веб: npm run build (выводит в dist/ с оптимизированным JS/CSS).
+Нативный билд: npx cap copy (копирует dist в native проекты), npx cap open android (открывает Android Studio для APK), npx cap open ios (открывает Xcode для IPA). В Android Studio: Build > Generate Signed Bundle/APK; в Xcode: Product > Archive > Distribute App.
+
+Тестирование: Браузер (Chrome на Android/iOS) для PWA, DevTools (Lighthouse для PWA-аудита: оффлайн, installable). Для нативных: Эмуляторы (Android Studio AVD, Xcode Simulator) или Expo Go (если hybrid). Установи APK/IPA на устройство. Обработай тач-эвенты (addEventListener('touchstart')).
+2. Код на JavaScript
+Структура проекта (index.html + src/):
+
+index.html: Entry-point — , <script type="module" src="/src/app.js"></script>.
+src/app.js: Инициализация — fetchCountries(), рендер UI (DOM или React).
+Модули: src/countries.js (API-загрузка/кэш), src/gameLogic.js (состояния, счёт), src/ui.js (функции для меню, панели, карточек).
+Кэширование данных: Загрузи все страны (~250) один раз при запуске (fetch('https://restcountries.com/v3.1/all').then(res => res.json()) → Array<Country>). Сохрани в localStorage (JSON.stringify) для оффлайн-режима (Service Worker кэширует JSON через Workbox; Capacitor использует нативный storage).
+Стиль кода: Vanilla JS с ES6+ (const countries = []; let state = {};). Country: { name: string, flag_url: string }. Для удобства — опционально React (npm i react, но vanilla проще для PWA; Vite поддерживает из коробки).
+Обработка ошибок: try/catch для fetch, console.log для дебаг.
+
+3. UI: Боковая панель с бургер-меню и вкладкой "Игра"
+Общая навигация: CSS + JS для responsive layout (media queries для мобильных экранов: portrait mode). Используй flexbox/grid. Vite оптимизирует CSS (PostCSS по умолчанию).
+Бургер-меню:
+
+Верхний левый угол: <button id="burger">☰</button> (CSS: position fixed).
+On-click: JS — toggle class 'open' на , CSS transition: transform: translateX(0) для выдвижения слева (width: 80vw, overlay).
+Панель:  с Игра (highlight: .active { background: #ccc; }).
+Закрытие: Клик вне панели (event listener на document) или ×.
+
+Вкладка "Игра":
+
+При клике: JS — setState('game'), hide sidebar.
+Layout:  с display: flex (flex-direction: column) — Header (<button id="reset">Начать сначала</button> + ), Center (<img id="flag"> + Какая это страна?), Bottom ( с 4 <button>).
+Адаптация: window.innerWidth для размера экрана, CSS viewport units (vh/vw).
+
+Анимации: CSS transitions (transition: opacity 0.3s) для fade-in флага, slide кнопок (transform: translateY).
+4. Логика игры: Флаг, счётчик, варианты ответа, случайность
+Загрузка данных (DOMContentLoaded или useEffect):
+
+Fetch из REST Countries: const countries = await (await fetch('...')).json().map(c => ({ name: c.name.common, flag_url: c.flags.png }));
+Кэш: localStorage.setItem('countries', JSON.stringify(countries)).
+Всего стран: ~195 (фильтр: .filter(c => c.unMember), если нужно; API даёт 250+).
+
+Счётчик: let score = { correct: 0, total: 0 } (обновляй при ответе, рендер: document.getElementById('score').textContent = ${correct}/${total}).
+Позиция: Верх экрана, рядом с кнопкой "Начать сначала".
+Генерация вопроса (функция generateQuestion(), вызов при state change в 'Question'):
+
+Случайный флаг: Math.floor(Math.random() * countries.length) → правильная страна.
+Неправильные: Создай копию countries, filter без правильной, slice(0,3) после shuffle.
+Шуффл: let options = [correct, ...wrong].sort(() => Math.random() - 0.5).
+Показ: document.getElementById('flag').src = flag_url (onerror для fallback).
+Текст вопроса: "Какая это страна?".
+
+Варианты ответа (Bottom UI):
+
+4 <button class="option"> с innerText = страна.name (grid CSS).
+On-click: if (this.textContent === correct.name) { score.correct++; score.total++ } else: Показать modal (Правильный: {correct.name}, красный/зелёный CSS).
+После ответа: setTimeout(() => { hideModal(); generateQuestion(); }, 1000) (или end если total === countries.length).
+
+Кнопка "Начать сначала" (верх):
+
+On-click: score = {0,0}; clear UI (innerHTML=''), generateQuestion().
+
+Случайность: Math.random() для уникальности (JS RNG ok).
+Конец игры: Если total === countries.length, modal "Игра завершена! Score: {correct}/{total}".
+Состояния (let quizState = 'Idle'): 'Idle' (меню), 'Loading' (API), 'Question', 'Answering', 'Result' (показ верного), 'Next'.
+Переходы: quizState = 'newState'; renderUI().
+5. Дополнительные детали реализации
+Оффлайн-поддержка: Service Worker кэширует countries.json и флаги (workbox.cacheableResponse({statuses: [0, 200]}) через vite-plugin-pwa; Capacitor использует нативный WebView для этого).

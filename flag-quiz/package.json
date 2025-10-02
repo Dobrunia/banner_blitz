@@ -1,0 +1,29 @@
+{
+  "name": "flag-quiz",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "cap:copy": "npx cap copy",
+    "cap:sync": "npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios",
+    "cap:build:android": "npm run build && npx cap copy && npx cap open android",
+    "cap:build:ios": "npm run build && npx cap copy && npx cap open ios",
+    "cap:apk": "npm run build && npx cap copy && cd android && gradlew.bat assembleDebug",
+    "build:apk": "npm run build && npx cap copy && cd android && gradlew.bat assembleDebug && copy app\\build\\outputs\\apk\\debug\\app-debug.apk ..\\apk-builds\\latest.apk"
+  },
+  "devDependencies": {
+    "vite": "^7.1.7",
+    "vite-plugin-pwa": "^1.0.3"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@capacitor/ios": "^7.4.3"
+  }
+}
