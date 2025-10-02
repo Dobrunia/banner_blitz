@@ -1,57 +1,39 @@
 name: Build and Deploy to FTP
 
 on:
-    push:
-        branches: [main, master]
-    pull_request:
-        branches: [main, master]
-    workflow_dispatch:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
 
 jobs:
-    build-and-deploy:
-        runs-on: ubuntu-latest
-        timeout-minutes: 15
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: "20"
-                  cache: "npm"
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
 
-            - name: Install dependencies
-              run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-            - name: Build project
-              run: npm run build
+      - name: Build project
+        run: npm run build
 
-            - name: Deploy to FTP
-              uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-              with:
-                server: ${{ secrets.FTP_SERVER }}
-                username: ${{ secrets.FTP_USERNAME }}
-                password: ${{ secrets.FTP_PASSWORD }}
-                local-dir: ./dist/
-                server-dir: ./
-                force-upload: true
-                exclude: |
-                  **/.git*
-                  **/.git*/**
-                  **/node_modules/**
-                  **/.env
-                  **/.env.*
-                  **/README.md
-                  **/.github/**
-                  **/src/**
-                  **/public/**
-                  **/index.html
-                  **/vite.config.js
-                  **/package.json
-                  **/package-lock.json
-                  **/capacitor.config.json
-                  **/.gitignore
-                  **/tsconfig.json
-                  **/tsconfig.node.json
+      - name: Deploy to FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/
+          server-dir: ./
+          force-upload: true
