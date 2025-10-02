@@ -1,4 +1,4 @@
-name: Build APK
+name: Build APK (clean android)
 
 on:
   push:
@@ -7,9 +7,13 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build-apk:
     runs-on: ubuntu-latest
+    timeout-minutes: 40
 
     steps:
       - name: Checkout code
@@ -21,52 +25,76 @@ jobs:
           node-version: "20"
           cache: "npm"
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install npm dependencies (clean)
+        run: |
+          npm ci
+
+      - name: Ensure Capacitor CLI is present
+        run: |
+          npm install --no-audit --no-fund @capacitor/cli@latest
 
       - name: Build web app
-        run: npm run build
+        run: |
+          npm run build
 
       - name: Verify build output
         run: |
-          ls -la dist/
-          echo "Build completed, dist folder contents:"
+          echo "dist content:"
+          ls -la dist || true
 
-      - name: Setup Java
+      - name: Setup Java (Temurin 17)
         uses: actions/setup-java@v4
         with:
-          java-version: "17"
           distribution: "temurin"
+          java-version: "17"
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-        # (опционально) with: api-level, build-tools, ndk-version если нужно
+        # If you need explicit SDK/build-tools, enable and adjust the block below:
+        # with:
+        #   api-level: 33
+        #   build-tools: "33.0.2"
 
-      - name: Add or sync Capacitor Android
+      - name: Remove android directory (destructive)
         run: |
-          # Если папки android нет - добавим, иначе просто синхронизируем
           if [ -d android ]; then
-            echo "android directory already exists — running 'npx cap sync android'"
-            npx cap sync android
+            echo "Removing existing android directory for a clean add (destructive)"
+            rm -rf android
           else
-            echo "android directory not found — running 'npx cap add android'"
-            npx cap add android
+            echo "No android directory found — continuing"
           fi
 
-      - name: Copy web assets to Android (safety)
+      - name: Ensure @capacitor/android package present
         run: |
-          # cap sync уже делает copy, но делаем явный copy для надёжности
+          npm install --no-audit --no-fund @capacitor/android@latest
+
+      - name: Add Capacitor Android (clean add)
+        run: |
+          npx cap add android
+
+      - name: show android/settings.gradle
+        run: |
+          echo "---- android/settings.gradle ----"
+          sed -n '1,200p' android/settings.gradle || true
+          echo "---- end settings.gradle ----"
+
+      - name: Sync / Copy web assets to Android
+        run: |
+          npx cap sync android
           npx cap copy android
 
       - name: Make gradlew executable
-        run: chmod +x android/gradlew
+        run: |
+          chmod +x android/gradlew
+          ls -la android || true
 
-      - name: Build APK
+      - name: Build APK (assembleDebug)
         run: |
           cd android
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Upload APK artifact
+      - name: Upload APK artifact (flag-quiz-apk)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: flag-quiz-apk
@@ -74,12 +102,18 @@ jobs:
           retention-days: 30
 
       - name: Create APK in project directory
+        if: always()
         run: |
           mkdir -p apk-builds
-          cp android/app/build/outputs/apk/debug/app-debug.apk apk-builds/flag-quiz-$(date +%Y%m%d-%H%M%S).apk
-          cp android/app/build/outputs/apk/debug/app-debug.apk apk-builds/latest.apk
+          if [ -f android/app/build/outputs/apk/debug/app-debug.apk ]; then
+            cp android/app/build/outputs/apk/debug/app-debug.apk apk-builds/flag-quiz-$(date +%Y%m%d-%H%M%S).apk
+            cp android/app/build/outputs/apk/debug/app-debug.apk apk-builds/latest.apk
+          else
+            echo "APK not found, skipping copying to apk-builds"
+          fi
 
       - name: Upload APK to project directory
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: apk-in-project
