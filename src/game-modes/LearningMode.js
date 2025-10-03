@@ -19,6 +19,9 @@ export class LearningMode extends BaseGameMode {
       this.resetScore();
       this.countries = this.countriesAPI.getCountries();
 
+      // Перемешиваем страны для случайного порядка
+      this.shuffleArray(this.countries);
+
       this.currentIndex = 0;
 
       // Генерируем первый вопрос
@@ -115,5 +118,13 @@ export class LearningMode extends BaseGameMode {
           ? Math.round((this.currentIndex / this.countries.length) * 100)
           : 0,
     };
+  }
+
+  // Метод для перемешивания массива (алгоритм Фишера-Йетса)
+  shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
   }
 }

@@ -16,6 +16,7 @@ export class UI {
       navSurvival: document.getElementById('nav-survival'),
       navFlags: document.getElementById('nav-flags'),
       navRegion: document.getElementById('nav-region'),
+      navLearning: document.getElementById('nav-learning'),
       navReset: document.getElementById('nav-reset'),
 
       // Game elements
@@ -72,6 +73,11 @@ export class UI {
       this.closeSidebar();
       this.dispatchEvent('switchToRegionMode');
     });
+    this.elements.navLearning.addEventListener('click', () => {
+      this.setActiveNavItem(this.elements.navLearning);
+      this.closeSidebar();
+      this.dispatchEvent('switchToLearningMode');
+    });
     this.elements.navReset.addEventListener('click', () => {
       this.closeSidebar();
       this.dispatchEvent('resetAllGames');
@@ -107,6 +113,7 @@ export class UI {
     this.elements.navSurvival.classList.remove('active');
     this.elements.navFlags.classList.remove('active');
     this.elements.navRegion.classList.remove('active');
+    this.elements.navLearning.classList.remove('active');
 
     // Добавляем active к выбранной кнопке
     activeItem.classList.add('active');
@@ -122,6 +129,9 @@ export class UI {
     this.elements.flagsScreen.style.display = 'none';
     this.elements.loadingScreen.style.display = 'none';
 
+    // Очищаем режим обучения
+    this.cleanupLearningMode();
+
     // Скрываем сердечки если не режим выживания
     if (this.currentMode !== 'survival') {
       this.hideLivesIndicator();
@@ -132,6 +142,9 @@ export class UI {
     this.elements.flagsScreen.style.display = 'flex';
     this.elements.gameScreen.style.display = 'none';
     this.elements.loadingScreen.style.display = 'none';
+
+    // Очищаем режим обучения
+    this.cleanupLearningMode();
 
     // Скрываем сердечки в режиме флагов
     this.hideLivesIndicator();
@@ -168,13 +181,13 @@ export class UI {
 
     // Создаем контейнер для центрирования кнопки
     this.elements.options.innerHTML = `
-      <div class="start-container">
-        ${rulesText}
-        <button class="start-btn" onclick="document.dispatchEvent(new CustomEvent('beginGame'))">
-          🚀 Начать игру
-        </button>
-      </div>
-    `;
+        <div class="start-container">
+          ${rulesText}
+          <button class="start-btn" onclick="document.dispatchEvent(new CustomEvent('beginGame'))">
+            🚀 Начать игру
+          </button>
+        </div>
+      `;
   }
 
   updateScore(score) {
@@ -304,14 +317,14 @@ export class UI {
           <div class="modal-body">
             ${this.getResultsContent(stats)}
           </div>
-          <div class="modal-footer">
-            <button class="share-btn" data-share-text="${this.getShareText(stats)}">
-              📤 Поделиться результатом
-            </button>
-            <button class="play-again-btn">
-              🔄 Играть снова
-            </button>
-          </div>
+           <div class="modal-footer">
+             <button class="share-btn">
+               📤 Поделиться результатом
+             </button>
+             <button class="play-again-btn">
+               🔄 Играть снова
+             </button>
+           </div>
         </div>
       </div>
     `;
@@ -324,8 +337,23 @@ export class UI {
     const closeBtn = modal.querySelector('.modal-close');
 
     shareBtn.addEventListener('click', () => {
-      const shareText = shareBtn.dataset.shareText;
-      window.shareResults(shareText);
+      const shareText = this.getShareText(stats);
+      // Просто копируем в буфер обмена
+      navigator.clipboard
+        .writeText(shareText)
+        .then(() => {
+          this.showCustomNotification('Результат скопирован в буфер обмена!');
+        })
+        .catch(() => {
+          // Fallback для старых браузеров
+          const textArea = document.createElement('textarea');
+          textArea.value = shareText;
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          this.showCustomNotification('Результат скопирован в буфер обмена!');
+        });
     });
 
     playAgainBtn.addEventListener('click', () => {
@@ -444,18 +472,67 @@ export class UI {
 
   getShareText(stats) {
     const { score, percentage, selectedRegion } = stats;
+    const siteUrl = 'https://chatup.su/';
 
     if (this.currentMode === 'time') {
-      return `🎯 Режим "На время": ${score.correct} правильных ответов за 30 секунд! Точность: ${percentage}%`;
+      return `🎯 Режим "На время": ${score.correct} правильных ответов за 30 секунд! Точность: ${percentage}%\n\nИграй в "Флаги стран": ${siteUrl}`;
     } else if (this.currentMode === 'survival') {
-      return `❤️ Режим "На выживание": ${score.correct} правильных ответов! Точность: ${percentage}%`;
+      return `❤️ Режим "На выживание": ${score.correct} правильных ответов! Точность: ${percentage}%\n\nИграй в "Флаги стран": ${siteUrl}`;
     } else if (this.currentMode === 'region') {
-      return `🌍 Режим "Регионы" (${selectedRegion}): ${score.correct} правильных ответов! Точность: ${percentage}%`;
+      return `🌍 Режим "Регионы" (${selectedRegion}): ${score.correct} правильных ответов! Точность: ${percentage}%\n\nИграй в "Флаги стран": ${siteUrl}`;
     } else if (this.currentMode === 'flags') {
-      return `🏳️ Режим "4 Флага": ${score.correct} правильных ответов! Точность: ${percentage}%`;
+      return `🏳️ Режим "4 Флага": ${score.correct} правильных ответов! Точность: ${percentage}%\n\nИграй в "Флаги стран": ${siteUrl}`;
     } else {
-      return `📚 Классический режим: ${score.correct} правильных ответов! Точность: ${percentage}%`;
+      return `📚 Классический режим: ${score.correct} правильных ответов! Точность: ${percentage}%\n\nИграй в "Флаги стран": ${siteUrl}`;
     }
+  }
+
+  showCustomNotification(message) {
+    // Создаем кастомное уведомление
+    const notification = document.createElement('div');
+    notification.className = 'custom-notification';
+    notification.innerHTML = `
+      <div class="notification-content">
+        <span class="notification-icon">✅</span>
+        <span class="notification-text">${message}</span>
+      </div>
+    `;
+
+    // Добавляем стили
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      z-index: 10000;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    `;
+
+    // Добавляем в DOM
+    document.body.appendChild(notification);
+
+    // Анимация появления
+    setTimeout(() => {
+      notification.style.transform = 'translateX(0)';
+    }, 10);
+
+    // Автоматическое скрытие через 3 секунды
+    setTimeout(() => {
+      notification.style.transform = 'translateX(100%)';
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 300);
+    }, 3000);
   }
 
   // Event system
@@ -578,6 +655,9 @@ export class UI {
     this.elements.flagsScreen.style.display = 'none';
     this.elements.loadingScreen.style.display = 'none';
 
+    // Очищаем режим обучения
+    this.cleanupLearningMode();
+
     // Скрываем флаг и вопрос
     this.elements.question.style.display = 'none';
     this.elements.flag.style.display = 'none';
@@ -587,18 +667,18 @@ export class UI {
 
     // Показываем выбор региона
     this.elements.options.innerHTML = `
-      <div class="region-selection">
-        <h3>🌍 Выберите регион</h3>
-        <div class="region-buttons">
-          <button class="region-btn" data-region="Европа">🇪🇺 Европа</button>
-          <button class="region-btn" data-region="Азия">🌏 Азия</button>
-          <button class="region-btn" data-region="Африка">🌍 Африка</button>
-          <button class="region-btn" data-region="Северная Америка">🇺🇸 Северная Америка</button>
-          <button class="region-btn" data-region="Южная Америка">🇧🇷 Южная Америка</button>
-          <button class="region-btn" data-region="Океания">🌊 Океания</button>
-        </div>
-      </div>
-    `;
+       <div class="region-selection">
+         <h3>🌍 Выберите регион</h3>
+         <div class="region-buttons">
+           <button class="region-btn" data-region="Европа">🇪🇺 Европа</button>
+           <button class="region-btn" data-region="Азия">🌏 Азия</button>
+           <button class="region-btn" data-region="Африка">🌍 Африка</button>
+           <button class="region-btn" data-region="Северная Америка">🇺🇸 Северная Америка</button>
+           <button class="region-btn" data-region="Южная Америка">🇧🇷 Южная Америка</button>
+           <button class="region-btn" data-region="Океания">🌊 Океания</button>
+         </div>
+       </div>
+     `;
 
     // Добавляем обработчики для кнопок регионов
     this.elements.options.querySelectorAll('.region-btn').forEach((btn) => {
@@ -607,6 +687,111 @@ export class UI {
         this.dispatchEvent('selectRegion', region);
       });
     });
+  }
+
+  showLearningMode() {
+    this.elements.gameScreen.style.display = 'flex';
+    this.elements.flagsScreen.style.display = 'none';
+    this.elements.loadingScreen.style.display = 'none';
+
+    // Скрываем флаг и вопрос
+    this.elements.question.style.display = 'none';
+    this.elements.flag.style.display = 'none';
+
+    // Скрываем счетчик в режиме обучения
+    this.elements.score.style.display = 'none';
+
+    // Показываем стартовый экран обучения
+    this.elements.options.innerHTML = `
+       <div class="learning-mode">
+         <h3>📖 Режим обучения</h3>
+         <p>Изучайте страны без таймера и очков</p>
+         <button class="start-btn" id="start-learning">🚀 Начать изучение</button>
+       </div>
+     `;
+
+    // Добавляем обработчик для кнопки начала обучения
+    const startBtn = document.getElementById('start-learning');
+    if (startBtn) {
+      startBtn.addEventListener('click', () => {
+        this.dispatchEvent('beginGame');
+      });
+    }
+  }
+
+  showLearningQuestion(country) {
+    if (
+      !country ||
+      !this.elements.options ||
+      !this.elements.question ||
+      !this.elements.flag ||
+      !this.elements.gameScreen
+    ) {
+      console.error('Country is null or required elements missing');
+      return;
+    }
+
+    // Скрываем счетчик в режиме обучения
+    this.elements.score.style.display = 'none';
+
+    // Добавляем класс learning-mode для стилизации
+    this.elements.gameScreen.classList.add('learning-mode');
+    this.elements.gameScreen.style.display = 'flex';
+    this.elements.flagsScreen.style.display = 'none';
+    this.elements.loadingScreen.style.display = 'none';
+
+    // Показываем вопрос и флаг
+    this.elements.question.style.display = 'block';
+    this.elements.flag.style.display = 'block';
+    this.elements.question.textContent = country.name;
+
+    // Загружаем флаг
+    this.loadFlagWithFallback(country);
+
+    // Собираем дополнительную информацию о стране
+    const additionalInfo = [];
+    if (country.capital) additionalInfo.push(`🏛️ ${country.capital}`);
+    if (country.language) additionalInfo.push(`🗣️ ${country.language}`);
+    if (country.population) additionalInfo.push(`👥 ${country.population}`);
+    if (country.region) additionalInfo.push(`🌍 ${country.region}`);
+
+    // Показываем информацию о стране и кнопку "Следующая страна"
+    this.elements.options.innerHTML = `
+       <div class="learning-info">
+         <div class="country-info">
+           ${additionalInfo.map((info) => `<div class="info-item">${info}</div>`).join('')}
+         </div>
+         <button class="next-btn" id="next-country">➡️ Следующая страна</button>
+       </div>
+     `;
+
+    // Добавляем обработчик для кнопки "Следующая страна"
+    const nextBtn = document.getElementById('next-country');
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        this.dispatchEvent('nextQuestion');
+      });
+    }
+  }
+
+  cleanupLearningMode() {
+    // Удаляем элементы режима обучения
+    const learningInfo = document.querySelector('.learning-info');
+    if (learningInfo) learningInfo.remove();
+
+    const nextBtn = document.getElementById('next-country');
+    if (nextBtn) nextBtn.remove();
+
+    // Очищаем текст вопроса
+    if (this.elements.question) {
+      this.elements.question.textContent = '';
+      this.elements.question.style.display = 'block';
+    }
+
+    // Сбрасываем стили
+    if (this.elements.gameScreen) this.elements.gameScreen.classList.remove('learning-mode');
+    if (this.elements.flag) this.elements.flag.style.display = 'block';
+    if (this.elements.score) this.elements.score.style.display = 'block';
   }
 
   // Flags game methods
