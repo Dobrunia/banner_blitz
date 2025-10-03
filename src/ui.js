@@ -530,6 +530,26 @@ export class UI {
               <span class="score-label">Точность:</span>
               <span class="score-value">${stats.percentage}%</span>
             </div>
+            ${
+              stats.lives !== undefined
+                ? `
+            <div class="score-item">
+              <span class="score-label">Осталось жизней:</span>
+              <span class="score-value">❤️ ${stats.lives}</span>
+            </div>
+            `
+                : ''
+            }
+            ${
+              stats.timeLeft !== undefined
+                ? `
+            <div class="score-item">
+              <span class="score-label">Осталось времени:</span>
+              <span class="score-value">⏱️ ${stats.timeLeft}с</span>
+            </div>
+            `
+                : ''
+            }
           </div>
         </div>
         <div class="modal-footer">
