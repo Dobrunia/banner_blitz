@@ -5,3 +5,4 @@ export { SurvivalMode } from './SurvivalMode.js';
 export { ClassicMode } from './ClassicMode.js';
 export { FlagsMode } from './FlagsMode.js';
 export { RegionMode } from './RegionMode.js';
+export { LearningMode } from './LearningMode.js';

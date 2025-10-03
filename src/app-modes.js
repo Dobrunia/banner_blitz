@@ -1,7 +1,14 @@
 // Main application with game modes support
 import './style.css';
 import { CountriesAPI } from './countries.js';
-import { TimeMode, SurvivalMode, ClassicMode, FlagsMode, RegionMode } from './game-modes/index.js';
+import {
+  TimeMode,
+  SurvivalMode,
+  ClassicMode,
+  FlagsMode,
+  RegionMode,
+  LearningMode,
+} from './game-modes/index.js';
 import { UI } from './ui.js';
 
 class FlagQuizAppModes {
@@ -13,6 +20,7 @@ class FlagQuizAppModes {
       classic: new ClassicMode(this.countriesAPI),
       flags: new FlagsMode(this.countriesAPI),
       region: new RegionMode(this.countriesAPI),
+      learning: new LearningMode(this.countriesAPI),
     };
     this.currentMode = 'classic'; // по умолчанию классический режим
     this.ui = new UI(this.gameModes[this.currentMode]);
@@ -55,6 +63,7 @@ class FlagQuizAppModes {
     document.addEventListener('switchToSurvivalMode', () => this.switchToMode('survival'));
     document.addEventListener('switchToFlagsMode', () => this.switchToMode('flags'));
     document.addEventListener('switchToRegionMode', () => this.switchToMode('region'));
+    document.addEventListener('switchToLearningMode', () => this.switchToMode('learning'));
     document.addEventListener('selectRegion', (e) => this.selectRegion(e.detail));
     document.addEventListener('resetAllGames', () => this.resetAllGames());
 
@@ -132,6 +141,9 @@ class FlagQuizAppModes {
       case 'RegionSelection':
         this.ui.showRegionSelection();
         break;
+      case 'Learning':
+        this.ui.showLearningMode();
+        break;
 
       case 'Question':
         if (this.currentMode === 'flags') {
@@ -140,6 +152,12 @@ class FlagQuizAppModes {
           if (state.currentQuestion && state.options) {
             this.ui.displayFlagsQuestion(state.currentQuestion, state.options);
           }
+        } else if (this.currentMode === 'learning') {
+          const country = this.gameModes[this.currentMode].getCurrentCountry();
+          if (country) {
+            this.ui.showLearningQuestion(country);
+          }
+          // В режиме обучения не показываем счетчик
         } else {
           this.ui.showGame();
           this.updateScore();

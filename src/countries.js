@@ -15,6 +15,10 @@ export class CountriesAPI {
       flag_svg: `/flags/${country.flag_file}`,
       region: country.region,
       code: country.code,
+      capital: country.capital,
+      language: country.language,
+      population: country.population,
+      flag_file: country.flag_file, // Добавляем оригинальное поле для совместимости
     }));
 
     this.isLoaded = true;
