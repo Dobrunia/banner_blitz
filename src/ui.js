@@ -11,8 +11,11 @@ export class UI {
       sidebar: document.getElementById('sidebar'),
       overlay: document.getElementById('overlay'),
       // closeSidebar: document.getElementById('close-sidebar'),
-      navGame: document.getElementById('nav-game'),
+      navClassic: document.getElementById('nav-classic'),
+      navTime: document.getElementById('nav-time'),
+      navSurvival: document.getElementById('nav-survival'),
       navFlags: document.getElementById('nav-flags'),
+      navRegion: document.getElementById('nav-region'),
       navReset: document.getElementById('nav-reset'),
 
       // Game elements
@@ -44,15 +47,30 @@ export class UI {
     this.elements.burger.addEventListener('click', () => this.toggleSidebar());
     // this.elements.closeSidebar.addEventListener('click', () => this.closeSidebar());
     this.elements.overlay.addEventListener('click', () => this.closeSidebar());
-    this.elements.navGame.addEventListener('click', () => {
-      this.setActiveNavItem(this.elements.navGame);
+    this.elements.navClassic.addEventListener('click', () => {
+      this.setActiveNavItem(this.elements.navClassic);
       this.closeSidebar();
-      this.dispatchEvent('switchToFlagMode');
+      this.dispatchEvent('switchToClassicMode');
+    });
+    this.elements.navTime.addEventListener('click', () => {
+      this.setActiveNavItem(this.elements.navTime);
+      this.closeSidebar();
+      this.dispatchEvent('switchToTimeMode');
+    });
+    this.elements.navSurvival.addEventListener('click', () => {
+      this.setActiveNavItem(this.elements.navSurvival);
+      this.closeSidebar();
+      this.dispatchEvent('switchToSurvivalMode');
     });
     this.elements.navFlags.addEventListener('click', () => {
       this.setActiveNavItem(this.elements.navFlags);
       this.closeSidebar();
       this.dispatchEvent('switchToFlagsMode');
+    });
+    this.elements.navRegion.addEventListener('click', () => {
+      this.setActiveNavItem(this.elements.navRegion);
+      this.closeSidebar();
+      this.dispatchEvent('switchToRegionMode');
     });
     this.elements.navReset.addEventListener('click', () => {
       this.closeSidebar();
@@ -84,8 +102,11 @@ export class UI {
 
   setActiveNavItem(activeItem) {
     // Убираем active со всех кнопок
-    this.elements.navGame.classList.remove('active');
+    this.elements.navClassic.classList.remove('active');
+    this.elements.navTime.classList.remove('active');
+    this.elements.navSurvival.classList.remove('active');
     this.elements.navFlags.classList.remove('active');
+    this.elements.navRegion.classList.remove('active');
 
     // Добавляем active к выбранной кнопке
     activeItem.classList.add('active');
@@ -100,22 +121,100 @@ export class UI {
     this.elements.gameScreen.style.display = 'flex';
     this.elements.flagsScreen.style.display = 'none';
     this.elements.loadingScreen.style.display = 'none';
+
+    // Скрываем сердечки если не режим выживания
+    if (this.currentMode !== 'survival') {
+      this.hideLivesIndicator();
+    }
   }
 
   showFlagsGame() {
     this.elements.flagsScreen.style.display = 'flex';
     this.elements.gameScreen.style.display = 'none';
     this.elements.loadingScreen.style.display = 'none';
+
+    // Скрываем сердечки в режиме флагов
+    this.hideLivesIndicator();
   }
 
   showLoading() {
     this.elements.gameScreen.style.display = 'none';
     this.elements.loadingScreen.style.display = 'flex';
+
+    // Скрываем сердечки при загрузке
+    this.hideLivesIndicator();
+  }
+
+  showReadyScreen() {
+    this.elements.gameScreen.style.display = 'flex';
+    this.elements.flagsScreen.style.display = 'none';
+    this.elements.loadingScreen.style.display = 'none';
+
+    // Показываем только кнопку старт по центру
+    this.elements.question.style.display = 'none';
+    this.elements.flag.style.display = 'none';
+
+    // Определяем правила в зависимости от режима
+    let rulesText = '';
+    if (this.currentMode === 'time') {
+      rulesText = `
+        <div class="game-rules">
+          <h3>⏰ Режим "На время"</h3>
+          <p>• Угадайте как можно больше флагов за 30 секунд</p>
+          <p>• За неправильный ответ отнимается 2 секунды</p>
+        </div>
+      `;
+    }
+
+    // Создаем контейнер для центрирования кнопки
+    this.elements.options.innerHTML = `
+      <div class="start-container">
+        ${rulesText}
+        <button class="start-btn" onclick="document.dispatchEvent(new CustomEvent('beginGame'))">
+          🚀 Начать игру
+        </button>
+      </div>
+    `;
   }
 
   updateScore(score) {
-    const totalCountries = this.gameLogic ? this.gameLogic.countriesAPI.getCountries().length : 0;
-    this.elements.score.textContent = `${score.correct}/${totalCountries}`;
+    if (!this.gameLogic) return;
+
+    const stats = score || this.gameLogic.getGameStats();
+    let scoreText = '';
+
+    if (this.currentMode === 'time') {
+      // Для режима на время показываем время
+      const timeLeft = stats.timeLeft || 0;
+      scoreText = `${stats.score.correct}/${timeLeft}с`;
+    } else if (this.currentMode === 'survival') {
+      // Для режима выживания показываем только правильные ответы и жизни
+      const lives = stats.lives || 3;
+      scoreText = `${stats.score.correct} | ❤️ ${lives}`;
+    } else if (this.currentMode === 'flags') {
+      // Для режима 4 флага показываем правильные/всего
+      const total =
+        this.gameLogic && this.gameLogic.countriesAPI
+          ? this.gameLogic.countriesAPI.getCountries().length
+          : 0;
+      scoreText = `${stats.score.correct}/${total}`;
+    } else if (this.currentMode === 'region') {
+      // Для режима регионов показываем правильные/всего в регионе
+      if (stats.selectedRegion && stats.totalCountries) {
+        scoreText = `${stats.score.correct}/${stats.totalCountries}`;
+      } else {
+        scoreText = `${stats.score.correct}/0`;
+      }
+    } else {
+      // Для классического режима показываем правильные/всего стран
+      const totalCountries =
+        this.gameLogic && this.gameLogic.countriesAPI
+          ? this.gameLogic.countriesAPI.getCountries().length
+          : 0;
+      scoreText = `${stats.score.correct}/${totalCountries}`;
+    }
+
+    this.elements.score.textContent = scoreText;
   }
 
   displayQuestion(question, options) {
@@ -134,6 +233,11 @@ export class UI {
 
     // Try to load the flag with multiple fallback strategies
     this.loadFlagWithFallback(question);
+
+    // Показываем сердечки для режима выживания
+    if (this.currentMode === 'survival') {
+      this.showLivesIndicator();
+    }
 
     // Clear and create options
     this.elements.options.innerHTML = '';
@@ -172,11 +276,186 @@ export class UI {
       // Для обычного режима - подсвечиваем кнопки ответов
       this.highlightAnswerButtons(result);
     }
+
+    // Обновляем сердечки для режима выживания
+    if (this.currentMode === 'survival') {
+      this.showLivesIndicator();
+    }
   }
 
   showGameFinished(stats) {
     const { score, percentage, totalCountries } = stats;
-    // Игра просто останавливается - никаких дальнейших действий
+
+    // Создаем модальное окно с результатами
+    this.showResultsModal(stats);
+  }
+
+  showResultsModal(stats) {
+    // Создаем модальное окно
+    const modal = document.createElement('div');
+    modal.className = 'results-modal';
+    modal.innerHTML = `
+      <div class="modal-overlay">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>🎉 Игра завершена!</h2>
+            <button class="modal-close">×</button>
+          </div>
+          <div class="modal-body">
+            ${this.getResultsContent(stats)}
+          </div>
+          <div class="modal-footer">
+            <button class="share-btn" data-share-text="${this.getShareText(stats)}">
+              📤 Поделиться результатом
+            </button>
+            <button class="play-again-btn">
+              🔄 Играть снова
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // Добавляем обработчики событий
+    const shareBtn = modal.querySelector('.share-btn');
+    const playAgainBtn = modal.querySelector('.play-again-btn');
+    const closeBtn = modal.querySelector('.modal-close');
+
+    shareBtn.addEventListener('click', () => {
+      const shareText = shareBtn.dataset.shareText;
+      window.shareResults(shareText);
+    });
+
+    playAgainBtn.addEventListener('click', () => {
+      document.dispatchEvent(new CustomEvent('resetAllGames'));
+      modal.remove();
+    });
+
+    closeBtn.addEventListener('click', () => {
+      modal.remove();
+    });
+  }
+
+  getResultsContent(stats) {
+    const { score, percentage, totalCountries, selectedRegion, timeLeft, lives } = stats;
+
+    if (this.currentMode === 'time') {
+      return `
+        <div class="results-stats">
+          <div class="stat-item">
+            <span class="stat-label">⏰ Время:</span>
+            <span class="stat-value">30 секунд</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">✅ Правильных ответов:</span>
+            <span class="stat-value">${score.correct}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">❌ Неправильных ответов:</span>
+            <span class="stat-value">${score.incorrect}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">📊 Точность:</span>
+            <span class="stat-value">${percentage}%</span>
+          </div>
+        </div>
+      `;
+    } else if (this.currentMode === 'survival') {
+      return `
+        <div class="results-stats">
+          <div class="stat-item">
+            <span class="stat-label">✅ Правильных ответов:</span>
+            <span class="stat-value">${score.correct}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">❌ Неправильных ответов:</span>
+            <span class="stat-value">${score.incorrect}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">📊 Точность:</span>
+            <span class="stat-value">${percentage}%</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">💀 Причина окончания:</span>
+            <span class="stat-value">Закончились жизни</span>
+          </div>
+        </div>
+      `;
+    } else if (this.currentMode === 'region') {
+      return `
+        <div class="results-stats">
+          <div class="stat-item">
+            <span class="stat-label">🌍 Регион:</span>
+            <span class="stat-value">${selectedRegion}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">✅ Правильных ответов:</span>
+            <span class="stat-value">${score.correct}/${totalCountries}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">❌ Неправильных ответов:</span>
+            <span class="stat-value">${score.incorrect}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">📊 Точность:</span>
+            <span class="stat-value">${percentage}%</span>
+          </div>
+        </div>
+      `;
+    } else if (this.currentMode === 'flags') {
+      return `
+        <div class="results-stats">
+          <div class="stat-item">
+            <span class="stat-label">✅ Правильных ответов:</span>
+            <span class="stat-value">${score.correct}/${totalCountries}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">❌ Неправильных ответов:</span>
+            <span class="stat-value">${score.incorrect}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">📊 Точность:</span>
+            <span class="stat-value">${percentage}%</span>
+          </div>
+        </div>
+      `;
+    } else {
+      // Классический режим
+      return `
+        <div class="results-stats">
+          <div class="stat-item">
+            <span class="stat-label">✅ Правильных ответов:</span>
+            <span class="stat-value">${score.correct}/${totalCountries}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">❌ Неправильных ответов:</span>
+            <span class="stat-value">${score.incorrect}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">📊 Точность:</span>
+            <span class="stat-value">${percentage}%</span>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  getShareText(stats) {
+    const { score, percentage, selectedRegion } = stats;
+
+    if (this.currentMode === 'time') {
+      return `🎯 Режим "На время": ${score.correct} правильных ответов за 30 секунд! Точность: ${percentage}%`;
+    } else if (this.currentMode === 'survival') {
+      return `❤️ Режим "На выживание": ${score.correct} правильных ответов! Точность: ${percentage}%`;
+    } else if (this.currentMode === 'region') {
+      return `🌍 Режим "Регионы" (${selectedRegion}): ${score.correct} правильных ответов! Точность: ${percentage}%`;
+    } else if (this.currentMode === 'flags') {
+      return `🏳️ Режим "4 Флага": ${score.correct} правильных ответов! Точность: ${percentage}%`;
+    } else {
+      return `📚 Классический режим: ${score.correct} правильных ответов! Точность: ${percentage}%`;
+    }
   }
 
   // Event system
@@ -253,6 +532,81 @@ export class UI {
     flagElement.style.textAlign = 'center';
     flagElement.style.padding = '20px';
     flagElement.innerHTML = `Флаг недоступен<br><small>${countryName}</small>`;
+  }
+
+  showLivesIndicator() {
+    const stats = this.gameLogic.getGameStats();
+    const lives = stats.lives || 3;
+    const maxLives = stats.maxLives || 3;
+
+    // Создаем индикатор жизней
+    let livesHTML = '';
+    for (let i = 0; i < maxLives; i++) {
+      if (i < lives) {
+        livesHTML += '<span class="life-heart">❤️</span>';
+      } else {
+        livesHTML += '<span class="life-heart lost">❤️</span>';
+      }
+    }
+
+    // Добавляем индикатор жизней над флагом
+    const livesContainer = document.createElement('div');
+    livesContainer.className = 'lives-indicator';
+    livesContainer.innerHTML = livesHTML;
+
+    // Удаляем старый индикатор если есть
+    const oldIndicator = document.querySelector('.lives-indicator');
+    if (oldIndicator) {
+      oldIndicator.remove();
+    }
+
+    // Добавляем новый индикатор в контейнер флага, но ПЕРЕД флагом
+    const flagContainer = this.elements.flag.parentNode;
+    flagContainer.insertBefore(livesContainer, this.elements.flag);
+  }
+
+  hideLivesIndicator() {
+    // Удаляем индикатор жизней если он есть
+    const oldIndicator = document.querySelector('.lives-indicator');
+    if (oldIndicator) {
+      oldIndicator.remove();
+    }
+  }
+
+  showRegionSelection() {
+    this.elements.gameScreen.style.display = 'flex';
+    this.elements.flagsScreen.style.display = 'none';
+    this.elements.loadingScreen.style.display = 'none';
+
+    // Скрываем флаг и вопрос
+    this.elements.question.style.display = 'none';
+    this.elements.flag.style.display = 'none';
+
+    // Показываем счетчик
+    this.updateScore();
+
+    // Показываем выбор региона
+    this.elements.options.innerHTML = `
+      <div class="region-selection">
+        <h3>🌍 Выберите регион</h3>
+        <div class="region-buttons">
+          <button class="region-btn" data-region="Европа">🇪🇺 Европа</button>
+          <button class="region-btn" data-region="Азия">🌏 Азия</button>
+          <button class="region-btn" data-region="Африка">🌍 Африка</button>
+          <button class="region-btn" data-region="Северная Америка">🇺🇸 Северная Америка</button>
+          <button class="region-btn" data-region="Южная Америка">🇧🇷 Южная Америка</button>
+          <button class="region-btn" data-region="Океания">🌊 Океания</button>
+        </div>
+      </div>
+    `;
+
+    // Добавляем обработчики для кнопок регионов
+    this.elements.options.querySelectorAll('.region-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const region = e.target.dataset.region;
+        this.dispatchEvent('selectRegion', region);
+      });
+    });
   }
 
   // Flags game methods
@@ -365,4 +719,43 @@ export class UI {
       button.style.cursor = 'pointer';
     });
   }
+}
+
+// Глобальная функция для поделиться результатом
+window.shareResults = function (text) {
+  if (navigator.share) {
+    // Используем Web Share API если доступен
+    navigator
+      .share({
+        title: 'Результат игры "Флаги стран"',
+        text: text,
+        url: window.location.href,
+      })
+      .catch((err) => {
+        console.log('Ошибка при поделиться:', err);
+        fallbackShare(text);
+      });
+  } else {
+    // Fallback для браузеров без Web Share API
+    fallbackShare(text);
+  }
+};
+
+function fallbackShare(text) {
+  // Копируем текст в буфер обмена
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      alert('Результат скопирован в буфер обмена!');
+    })
+    .catch(() => {
+      // Если не удалось скопировать, показываем текст для ручного копирования
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Результат скопирован в буфер обмена!');
+    });
 }

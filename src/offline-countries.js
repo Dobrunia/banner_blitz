@@ -799,7 +799,7 @@ export const OFFLINE_COUNTRIES = [
     code: 'CG',
   },
   {
-    name: 'ДР Конго',
+    name: 'Республика Конго',
     region: 'Африка',
     flag_file: 'democratic-republic-congo.png',
     code: 'CD',
@@ -1091,12 +1091,6 @@ export const OFFLINE_COUNTRIES = [
     region: 'Европа',
     flag_file: 'north-macedonia.png',
     code: 'MK',
-  },
-  {
-    name: 'Республика Конго',
-    region: 'Африка',
-    flag_file: 'republic-congo.png',
-    code: 'CG',
   },
   {
     name: 'Палау',
