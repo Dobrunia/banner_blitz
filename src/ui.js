@@ -200,34 +200,53 @@ export class UI {
       // Для режима на время показываем время
       const timeLeft = stats.timeLeft || 0;
       scoreText = `${stats.score.correct}/${timeLeft}с`;
-    } else if (this.currentMode === 'survival') {
-      // Для режима выживания показываем только правильные ответы и жизни
-      const lives = stats.lives || 3;
-      scoreText = `${stats.score.correct} | ❤️ ${lives}`;
-    } else if (this.currentMode === 'flags') {
-      // Для режима 4 флага показываем правильные/всего
-      const total =
-        this.gameLogic && this.gameLogic.countriesAPI
-          ? this.gameLogic.countriesAPI.getCountries().length
-          : 0;
-      scoreText = `${stats.score.correct}/${total}`;
-    } else if (this.currentMode === 'region') {
-      // Для режима регионов показываем правильные/всего в регионе
-      if (stats.selectedRegion && stats.totalCountries) {
-        scoreText = `${stats.score.correct}/${stats.totalCountries}`;
-      } else {
-        scoreText = `${stats.score.correct}/0`;
+
+      // Обновляем только если изменился текст (избегаем мигания)
+      if (this.elements.score.textContent !== scoreText) {
+        this.elements.score.textContent = scoreText;
       }
     } else {
-      // Для классического режима показываем правильные/всего стран
-      const totalCountries =
-        this.gameLogic && this.gameLogic.countriesAPI
-          ? this.gameLogic.countriesAPI.getCountries().length
-          : 0;
-      scoreText = `${stats.score.correct}/${totalCountries}`;
-    }
+      if (this.currentMode === 'survival') {
+        // Для режима выживания показываем только правильные ответы и жизни
+        const lives = stats.lives || 3;
+        scoreText = `${stats.score.correct} | ❤️ ${lives}`;
+      } else if (this.currentMode === 'flags') {
+        // Для режима 4 флага показываем правильные/всего
+        const total =
+          this.gameLogic && this.gameLogic.countriesAPI
+            ? this.gameLogic.countriesAPI.getCountries().length
+            : 0;
+        scoreText = `${stats.score.correct}/${total}`;
+      } else if (this.currentMode === 'region') {
+        // Для режима регионов показываем правильные/всего в регионе
+        if (stats.selectedRegion && stats.totalCountries) {
+          scoreText = `${stats.score.correct}/${stats.totalCountries}`;
+        } else {
+          scoreText = `${stats.score.correct}/0`;
+        }
+      } else {
+        // Для классического режима показываем правильные/всего стран
+        const totalCountries =
+          this.gameLogic && this.gameLogic.countriesAPI
+            ? this.gameLogic.countriesAPI.getCountries().length
+            : 0;
+        scoreText = `${stats.score.correct}/${totalCountries}`;
+      }
 
-    this.elements.score.textContent = scoreText;
+      this.elements.score.textContent = scoreText;
+    }
+  }
+
+  // Отдельный метод для обновления только времени (без перерисовки)
+  updateTimeOnly(timeLeft, correctAnswers) {
+    if (this.currentMode !== 'time') return;
+
+    const scoreText = `${correctAnswers}/${timeLeft}с`;
+
+    // Обновляем только если изменился текст
+    if (this.elements.score.textContent !== scoreText) {
+      this.elements.score.textContent = scoreText;
+    }
   }
 
   displayQuestion(question, options) {
@@ -485,6 +504,84 @@ export class UI {
     } else {
       return `📚 Классический режим: ${score.correct} правильных ответов! Точность: ${percentage}%\n\nИграй в "Флаги стран": ${siteUrl}`;
     }
+  }
+
+  showGameResults(stats) {
+    // Создаем модальное окно с результатами
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>🎉 Игра завершена!</h2>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="score-display">
+            <div class="score-item">
+              <span class="score-label">Правильных ответов:</span>
+              <span class="score-value">${stats.score.correct}</span>
+            </div>
+            <div class="score-item">
+              <span class="score-label">Неправильных ответов:</span>
+              <span class="score-value">${stats.score.incorrect}</span>
+            </div>
+            <div class="score-item">
+              <span class="score-label">Точность:</span>
+              <span class="score-value">${stats.percentage}%</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="share-btn">📤 Поделиться результатом</button>
+          <button class="play-again-btn">🔄 Играть снова</button>
+        </div>
+      </div>
+    `;
+
+    // Добавляем модальное окно в DOM
+    document.body.appendChild(modal);
+
+    // Добавляем обработчики событий
+    const shareBtn = modal.querySelector('.share-btn');
+    const playAgainBtn = modal.querySelector('.play-again-btn');
+    const closeBtn = modal.querySelector('.modal-close');
+
+    shareBtn.addEventListener('click', () => {
+      const shareText = this.getShareText(stats);
+      // Просто копируем в буфер обмена
+      navigator.clipboard
+        .writeText(shareText)
+        .then(() => {
+          this.showCustomNotification('Результат скопирован в буфер обмена!');
+        })
+        .catch(() => {
+          // Fallback для старых браузеров
+          const textArea = document.createElement('textarea');
+          textArea.value = shareText;
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          this.showCustomNotification('Результат скопирован в буфер обмена!');
+        });
+    });
+
+    playAgainBtn.addEventListener('click', () => {
+      document.dispatchEvent(new CustomEvent('resetAllGames'));
+      modal.remove();
+    });
+
+    closeBtn.addEventListener('click', () => {
+      modal.remove();
+    });
+
+    // Закрытие по клику на overlay
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.remove();
+      }
+    });
   }
 
   showCustomNotification(message) {

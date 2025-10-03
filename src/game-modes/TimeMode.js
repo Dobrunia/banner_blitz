@@ -119,8 +119,8 @@ export class TimeMode extends BaseGameMode {
       if (this.isGameActive) {
         this.timeLeft--;
 
-        // Уведомляем слушателей об обновлении времени
-        this.notifyListeners();
+        // Уведомляем слушателей об обновлении времени (только время, без перерисовки)
+        this.notifyTimeUpdate();
 
         if (this.timeLeft <= 0) {
           this.endGame();
@@ -140,6 +140,15 @@ export class TimeMode extends BaseGameMode {
     this.stopTimer();
     this.isGameActive = false;
     this.setState('Idle');
+  }
+
+  // Уведомляем только об обновлении времени (без полной перерисовки)
+  notifyTimeUpdate() {
+    this.listeners.forEach((listener) => {
+      if (listener.onTimeUpdate) {
+        listener.onTimeUpdate(this.timeLeft, this.state.score.correct);
+      }
+    });
   }
 
   getTimeLeft() {

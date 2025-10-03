@@ -32,14 +32,8 @@ class FlagQuizAppModes {
     // Set up event listeners
     this.setupEventListeners();
 
-    // Set up game state listener for current mode
-    this.gameModes[this.currentMode].addListener((state) => {
-      this.handleGameState(state);
-      // Дополнительно обновляем счетчик для режима "На время"
-      if (this.currentMode === 'time') {
-        this.updateScore();
-      }
-    });
+    // Set up listeners for current mode
+    this.setupModeListeners();
 
     // Start the game
     try {
@@ -177,7 +171,13 @@ class FlagQuizAppModes {
         break;
 
       case 'Idle':
-        // Game finished or not started
+        // Game finished - show results
+        if (
+          this.currentMode === 'time' &&
+          this.gameModes[this.currentMode].getGameStats().isFinished
+        ) {
+          this.ui.showGameResults(this.gameModes[this.currentMode].getGameStats());
+        }
         break;
 
       default:
@@ -220,17 +220,13 @@ class FlagQuizAppModes {
     // Скрываем сердечки при переключении режимов
     this.ui.hideLivesIndicator();
 
-    this.gameModes[mode].addListener((state) => {
-      this.handleGameState(state);
-      // Дополнительно обновляем счетчик для режима "На время"
-      if (mode === 'time') {
-        this.updateScore();
-      }
-      // Показываем сердечки для режима выживания
-      if (mode === 'survival') {
-        this.ui.showLivesIndicator();
-      }
-    });
+    // Настраиваем слушатели для нового режима
+    this.setupModeListeners();
+
+    // Показываем сердечки для режима выживания
+    if (mode === 'survival') {
+      this.ui.showLivesIndicator();
+    }
 
     // Обновляем UI в зависимости от режима
     if (mode === 'classic') {
@@ -254,6 +250,26 @@ class FlagQuizAppModes {
 
     // Перезапускаем текущий режим
     this.startGame();
+  }
+
+  setupModeListeners() {
+    // Добавляем основной слушатель состояний
+    this.gameModes[this.currentMode].addListener((state) => {
+      this.handleGameState(state);
+      // Дополнительно обновляем счетчик для режима "На время"
+      if (this.currentMode === 'time') {
+        this.updateScore();
+      }
+    });
+
+    // Добавляем слушатель для обновления времени (только для режима на время)
+    if (this.currentMode === 'time') {
+      this.gameModes[this.currentMode].addListener({
+        onTimeUpdate: (timeLeft, correctAnswers) => {
+          this.ui.updateTimeOnly(timeLeft, correctAnswers);
+        },
+      });
+    }
   }
 
   showError(message) {

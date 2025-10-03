@@ -32,7 +32,11 @@ export class BaseGameMode {
   }
 
   notifyListeners() {
-    this.listeners.forEach((callback) => callback(this.getState()));
+    this.listeners.forEach((listener) => {
+      if (typeof listener === 'function') {
+        listener(this.getState());
+      }
+    });
   }
 
   resetScore() {
