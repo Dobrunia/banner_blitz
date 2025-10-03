@@ -83,6 +83,5 @@ On-click: score = {0,0}; clear UI (innerHTML=''), generateQuestion().
 Оффлайн-поддержка: Service Worker кэширует countries.json и флаги (workbox.cacheableResponse({statuses: [0, 200]}) через vite-plugin-pwa; Capacitor использует нативный WebView для этого).
 
 
-TODO::
-1) новая вкладка: просто карточки для запоминания флаг при клике на обратной стороне ответ стрелки перехода к след карточке
-2) билд по ios
+TODO::) билд по ios
+

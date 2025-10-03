@@ -28,12 +28,6 @@ export class UI {
       flagsQuestion: document.getElementById('flags-question'),
       flagsContainer: document.getElementById('flags-container'),
       flagsOptions: document.getElementById('flags-options'),
-
-      // Modal
-      modal: document.getElementById('modal'),
-      modalTitle: document.getElementById('modal-title'),
-      modalText: document.getElementById('modal-text'),
-      modalClose: document.getElementById('modal-close'),
     };
 
     this.isSidebarOpen = false;
@@ -43,7 +37,6 @@ export class UI {
   init() {
     this.setupSidebar();
     this.setupGame();
-    this.setupModal();
   }
 
   // Sidebar management
@@ -181,36 +174,9 @@ export class UI {
     }
   }
 
-  hideResult() {
-    this.elements.modal.classList.remove('show');
-  }
-
   showGameFinished(stats) {
     const { score, percentage, totalCountries } = stats;
-
-    this.elements.modalTitle.textContent = 'Игра завершена!';
-    this.elements.modalText.innerHTML = `
-      <p>Правильных ответов: ${score.correct} из ${totalCountries}</p>
-      <p>Неправильных ответов: ${score.incorrect}</p>
-      <p>Процент правильных ответов: ${percentage}%</p>
-    `;
-
-    this.elements.modal.classList.add('show');
-  }
-
-  // Modal management
-  setupModal() {
-    this.elements.modalClose.addEventListener('click', () => {
-      this.hideResult();
-      this.dispatchEvent('nextQuestion');
-    });
-
-    this.elements.modal.addEventListener('click', (e) => {
-      if (e.target === this.elements.modal) {
-        this.hideResult();
-        this.dispatchEvent('nextQuestion');
-      }
-    });
+    // Игра просто останавливается - никаких дальнейших действий
   }
 
   // Event system
