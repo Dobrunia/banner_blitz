@@ -146,7 +146,7 @@ body {
 .game-screen {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 80vh;
   padding: 20px;
   gap: 20px;
   position: relative;
@@ -235,7 +235,7 @@ body {
 
 /* Game Footer */
 .game-footer {
-  padding: 20px 0;
+  padding-bottom: 20px;
 }
 
 .options {
@@ -945,7 +945,7 @@ body {
   justify-content: center;
   gap: 30px;
   padding: 20px;
-  min-height: 100vh;
+  min-height: 80vh;
 }
 
 .game-screen.learning-mode .flag-container {
