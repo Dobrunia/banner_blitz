@@ -2,7 +2,7 @@
 export class UI {
   constructor(gameLogic = null) {
     this.gameLogic = gameLogic;
-    this.currentMode = 'flag';
+    this.currentMode = 'classic'; // По умолчанию классический режим
     this.isAnswered = false;
     this.isAnswerShown = false;
     this.elements = {
@@ -132,6 +132,9 @@ export class UI {
     // Очищаем режим обучения
     this.cleanupLearningMode();
 
+    // Очищаем кнопку-глазик
+    this.cleanupToggleAnswersButton();
+
     // Скрываем сердечки если не режим выживания
     if (this.currentMode !== 'survival') {
       this.hideLivesIndicator();
@@ -146,6 +149,9 @@ export class UI {
     // Очищаем режим обучения
     this.cleanupLearningMode();
 
+    // Очищаем кнопку-глазик
+    this.cleanupToggleAnswersButton();
+
     // Скрываем сердечки в режиме флагов
     this.hideLivesIndicator();
   }
@@ -153,6 +159,9 @@ export class UI {
   showLoading() {
     this.elements.gameScreen.style.display = 'none';
     this.elements.loadingScreen.style.display = 'flex';
+
+    // Очищаем кнопку-глазик
+    this.cleanupToggleAnswersButton();
 
     // Скрываем сердечки при загрузке
     this.hideLivesIndicator();
@@ -188,6 +197,11 @@ export class UI {
           </button>
         </div>
       `;
+
+    // Добавляем кнопку-глазик для поддерживаемых режимов на стартовой странице
+    if (['classic', 'survival', 'region'].includes(this.currentMode)) {
+      this.addToggleAnswersButton();
+    }
   }
 
   updateScore(score) {
@@ -274,13 +288,28 @@ export class UI {
     // Clear and create options
     this.elements.options.innerHTML = '';
 
+    // Добавляем кнопку-глазик для режимов: classic, survival, region (НЕ для learning)
+    if (['classic', 'survival', 'region'].includes(this.currentMode)) {
+      this.addToggleAnswersButton();
+    }
+
     options.forEach((option, index) => {
       const button = document.createElement('button');
       button.className = 'option-btn';
       button.textContent = option.name;
       button.dataset.country = option.name;
 
+      // Скрываем ответы по умолчанию для указанных режимов
+      if (['classic', 'survival', 'region'].includes(this.currentMode)) {
+        button.classList.add('answer-hidden');
+      }
+
       button.addEventListener('click', () => {
+        // Блокируем клики по скрытым кнопкам
+        if (button.classList.contains('answer-hidden')) {
+          return;
+        }
+
         // Если ответ уже показан - переходим к следующему вопросу
         if (this.isAnswerShown) {
           this.dispatchEvent('nextQuestion');
@@ -297,9 +326,77 @@ export class UI {
     });
   }
 
+  addToggleAnswersButton() {
+    // Удаляем существующую кнопку если есть
+    const existingButton = document.querySelector('.toggle-answers-btn');
+    if (existingButton) {
+      existingButton.remove();
+    }
+
+    // Создаем кнопку-глазик
+    const toggleButton = document.createElement('button');
+    toggleButton.className = 'toggle-answers-btn';
+    toggleButton.innerHTML = '👁️';
+    toggleButton.title = 'Показать/скрыть ответы';
+
+    // Добавляем обработчик клика
+    toggleButton.addEventListener('click', () => {
+      this.toggleAnswersVisibility();
+    });
+
+    // Создаем контейнер для кнопки справа сверху
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'toggle-answers-container';
+    buttonContainer.appendChild(toggleButton);
+
+    // Вставляем контейнер после вариантов ответов
+    this.elements.options.parentNode.insertBefore(
+      buttonContainer,
+      this.elements.options.nextSibling
+    );
+  }
+
+  toggleAnswersVisibility() {
+    const buttons = this.elements.options.querySelectorAll('.option-btn');
+    const toggleButton = document.querySelector('.toggle-answers-btn');
+
+    buttons.forEach((button) => {
+      button.classList.toggle('answer-hidden');
+    });
+
+    // Меняем иконку кнопки
+    if (buttons.length > 0 && buttons[0].classList.contains('answer-hidden')) {
+      toggleButton.innerHTML = '👁️';
+      toggleButton.title = 'Показать ответы';
+    } else {
+      toggleButton.innerHTML = '🙈';
+      toggleButton.title = 'Скрыть ответы';
+    }
+  }
+
+  showAnswers() {
+    const buttons = this.elements.options.querySelectorAll('.option-btn');
+    const toggleButton = document.querySelector('.toggle-answers-btn');
+
+    buttons.forEach((button) => {
+      button.classList.remove('answer-hidden');
+    });
+
+    // Обновляем иконку кнопки
+    if (toggleButton) {
+      toggleButton.innerHTML = '🙈';
+      toggleButton.title = 'Скрыть ответы';
+    }
+  }
+
   showResult(result) {
     const { isCorrect, correctAnswer, selectedAnswer } = result;
     this.isAnswerShown = true;
+
+    // Показываем ответы при результате для режимов с скрытыми ответами
+    if (['classic', 'survival', 'region'].includes(this.currentMode)) {
+      this.showAnswers();
+    }
 
     if (this.currentMode === 'flags') {
       // Для режима флагов - подсвечиваем флаги
@@ -775,6 +872,9 @@ export class UI {
     // Очищаем режим обучения
     this.cleanupLearningMode();
 
+    // Очищаем кнопку-глазик
+    this.cleanupToggleAnswersButton();
+
     // Скрываем флаг и вопрос
     this.elements.question.style.display = 'none';
     this.elements.flag.style.display = 'none';
@@ -810,6 +910,9 @@ export class UI {
     this.elements.gameScreen.style.display = 'flex';
     this.elements.flagsScreen.style.display = 'none';
     this.elements.loadingScreen.style.display = 'none';
+
+    // Очищаем кнопку-глазик
+    this.cleanupToggleAnswersButton();
 
     // Скрываем флаг и вопрос
     this.elements.question.style.display = 'none';
@@ -891,6 +994,12 @@ export class UI {
     }
   }
 
+  cleanupToggleAnswersButton() {
+    // Удаляем кнопку показа/скрытия ответов
+    const toggleContainer = document.querySelector('.toggle-answers-container');
+    if (toggleContainer) toggleContainer.remove();
+  }
+
   cleanupLearningMode() {
     // Удаляем элементы режима обучения
     const learningInfo = document.querySelector('.learning-info');
@@ -898,6 +1007,9 @@ export class UI {
 
     const nextBtn = document.getElementById('next-country');
     if (nextBtn) nextBtn.remove();
+
+    // Удаляем кнопку показа/скрытия ответов
+    this.cleanupToggleAnswersButton();
 
     // Очищаем текст вопроса
     if (this.elements.question) {
