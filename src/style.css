@@ -1,3 +1,34 @@
+/* CSS переменные для тем */
+:root {
+  /* Светлая тема */
+  --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --bg-secondary: rgba(255, 255, 255, 0.1);
+  --bg-tertiary: rgba(255, 255, 255, 0.2);
+  --text-primary: white;
+  --text-secondary: rgba(255, 255, 255, 0.8);
+  --border-color: rgba(255, 255, 255, 0.2);
+  --shadow: rgba(0, 0, 0, 0.3);
+  --accent: #4CAF50;
+  --accent-hover: #45a049;
+  --danger: #ff4757;
+  --warning: #ffa502;
+}
+
+[data-theme="dark"] {
+  /* Темная тема */
+  --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  --bg-secondary: rgba(0, 0, 0, 0.3);
+  --bg-tertiary: rgba(0, 0, 0, 0.5);
+  --text-primary: #e0e0e0;
+  --text-secondary: rgba(224, 224, 224, 0.7);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow: rgba(0, 0, 0, 0.6);
+  --accent: #00d4aa;
+  --accent-hover: #00b894;
+  --danger: #ff6b6b;
+  --warning: #feca57;
+}
+
 /* Reset and base styles */
 * {
   margin: 0;
@@ -7,12 +38,13 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #333;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   overflow: hidden;
   height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 #app {
@@ -52,11 +84,11 @@ body {
   left: -300px;
   width: 300px;
   height: 100vh;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--bg-secondary);
   backdrop-filter: blur(20px);
   z-index: 1000;
-  transition: transform 0.3s ease;
-  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, background 0.3s ease;
+  box-shadow: 2px 0 20px var(--shadow);
 }
 
 .sidebar.open {
@@ -101,18 +133,18 @@ body {
   cursor: pointer;
   border-radius: 10px;
   transition: all 0.3s ease;
-  color: #333;
+  color: var(--text-primary);
 }
 
 .nav-item:hover {
-  background: rgba(102, 126, 234, 0.1);
+  background: var(--bg-tertiary);
 }
 
 .nav-item.active {
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   font-weight: 700;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px var(--shadow);
 }
 
 /* Overlay */
@@ -122,11 +154,11 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--shadow);
   z-index: 999;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.3s ease;
+  transition: all 0.3s ease, background 0.3s ease;
 }
 
 .overlay.active {
@@ -247,26 +279,27 @@ body {
 }
 
 .option-btn {
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid transparent;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
   padding: 20px;
   border-radius: 15px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px var(--shadow);
   backdrop-filter: blur(10px);
   min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
+  color: var(--text-primary);
 }
 
 .option-btn:hover {
-  background: rgba(255, 255, 255, 1);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  background: var(--bg-tertiary);
+  box-shadow: 0 6px 20px var(--shadow);
 }
 
 .option-btn:disabled {
@@ -554,7 +587,8 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--bg-primary);
+  transition: background 0.3s ease;
 }
 
 .flags-main {
@@ -581,11 +615,11 @@ body {
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
-  border: 4px solid transparent;
+  border: 4px solid var(--border-color);
 }
 
 .flag-item:hover {
-  border-color: #f8ff1f;
+  border-color: var(--accent);
 }
 
 .flag-img {
@@ -605,21 +639,21 @@ body {
 }
 
 .flags-options .option-btn {
-  background: white;
-  border: none;
+  background: var(--bg-secondary);
+  border: 2px solid var(--border-color);
   border-radius: 8px;
   padding: 15px 20px;
   font-size: 16px;
   font-weight: 500;
-  color: #333;
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px var(--shadow);
 }
 
 .flags-options .option-btn:hover {
-  background: #f0f0f0;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  background: var(--bg-tertiary);
+  box-shadow: 0 4px 8px var(--shadow);
 }
 
 .flags-footer {
@@ -628,18 +662,19 @@ body {
 }
 
 .flags-question {
-  color: white;
+  color: var(--text-primary);
   font-size: 24px;
   font-weight: bold;
   text-align: center;
   margin-bottom: 20px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 2px 4px var(--shadow);
+  transition: color 0.3s ease;
 }
 
 /* Выбор региона */
 .region-selection {
   text-align: center;
-  color: white;
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -650,13 +685,16 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  transition: color 0.3s ease;
 }
 
 .region-selection h3 {
   margin: 0 0 30px 0;
   font-size: 24px;
   font-weight: bold;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 2px 4px var(--shadow);
+  color: var(--text-primary);
+  transition: color 0.3s ease;
 }
 
 .region-buttons {
@@ -669,24 +707,24 @@ body {
 }
 
 .region-btn {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-secondary);
   backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid var(--border-color);
   border-radius: 15px;
   padding: 20px;
-  color: white;
+  color: var(--text-primary);
   font-size: 18px;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 2px var(--shadow);
 }
 
 .region-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
+  background: var(--bg-tertiary);
+  border-color: var(--accent);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 20px var(--shadow);
 }
 
 .region-btn:active {
@@ -839,31 +877,31 @@ body {
 
 /* Стили для кнопки показа/скрытия ответов */
 .toggle-answers-btn {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-secondary);
   backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid var(--border-color);
   border-radius: 12px;
   padding: 10px 15px;
-  color: white;
+  color: var(--text-primary);
   font-size: 16px;
   cursor: pointer;
   transition: all 0.3s ease;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 2px var(--shadow);
   min-width: 50px;
   text-align: center;
 }
 
 .toggle-answers-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  background: var(--bg-tertiary);
+  border-color: var(--accent);
+  box-shadow: 0 6px 20px var(--shadow);
 }
 
 /* Стили для скрытых ответов */
 .option-btn.answer-hidden {
   color: transparent !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 2px solid rgba(255, 255, 255, 0.1) !important;
+  background: var(--bg-secondary) !important;
+  border: 2px solid var(--border-color) !important;
   position: relative;
   overflow: hidden;
   cursor: not-allowed !important;
@@ -876,15 +914,15 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: white;
+  color: var(--text-primary);
   font-size: 16px;
   font-weight: bold;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 2px var(--shadow);
 }
 
 .option-btn.answer-hidden:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
   transform: none !important;
   box-shadow: none !important;
 }
@@ -1004,11 +1042,36 @@ body {
   }
 }
 
+/* Стили для кнопки переключения темы */
+.theme-toggle-btn {
+  background: var(--bg-secondary) !important;
+  border: 2px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  font-weight: bold !important;
+  margin-bottom: 10px !important;
+  transition: all 0.3s ease !important;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--bg-tertiary) !important;
+  border-color: var(--accent) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px var(--shadow) !important;
+}
+
+/* Разделитель в меню */
+.nav-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 10px 0;
+  border-radius: 1px;
+}
+
 /* Стили для кнопки сброса в меню */
 .reset-menu-btn {
   font-weight: bold !important;
   margin-top: 20px !important;
-  border: 2px solid #ff4757 !important;
+  border: 2px solid var(--danger) !important;
 }
 
 /* Стили для режима обучения */

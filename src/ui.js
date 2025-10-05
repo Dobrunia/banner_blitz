@@ -11,6 +11,7 @@ export class UI {
       sidebar: document.getElementById('sidebar'),
       overlay: document.getElementById('overlay'),
       // closeSidebar: document.getElementById('close-sidebar'),
+      themeToggle: document.getElementById('theme-toggle'),
       navClassic: document.getElementById('nav-classic'),
       navTime: document.getElementById('nav-time'),
       navSurvival: document.getElementById('nav-survival'),
@@ -122,6 +123,37 @@ export class UI {
   // Game UI
   setupGame() {
     // Обработчики кнопок перенесены в меню
+    this.setupThemeToggle();
+  }
+
+  setupThemeToggle() {
+    // Загружаем сохраненную тему
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    this.setTheme(savedTheme);
+
+    // Обработчик переключения темы
+    if (this.elements.themeToggle) {
+      this.elements.themeToggle.addEventListener('click', () => {
+        this.toggleTheme();
+      });
+    }
+  }
+
+  toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    this.setTheme(newTheme);
+  }
+
+  setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+
+    // Обновляем текст кнопки
+    if (this.elements.themeToggle) {
+      this.elements.themeToggle.textContent =
+        theme === 'dark' ? '☀️ Светлая тема' : '🌙 Темная тема';
+    }
   }
 
   showGame() {
