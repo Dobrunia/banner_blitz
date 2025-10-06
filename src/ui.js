@@ -18,6 +18,7 @@ export class UI {
       navFlags: document.getElementById('nav-flags'),
       navRegion: document.getElementById('nav-region'),
       navLearning: document.getElementById('nav-learning'),
+      navCapital: document.getElementById('nav-capital'),
       navReset: document.getElementById('nav-reset'),
 
       // Game elements
@@ -79,6 +80,11 @@ export class UI {
       this.closeSidebar();
       this.dispatchEvent('switchToLearningMode');
     });
+    this.elements.navCapital.addEventListener('click', () => {
+      this.setActiveNavItem(this.elements.navCapital);
+      this.closeSidebar();
+      this.dispatchEvent('switchToCapitalMode');
+    });
     this.elements.navReset.addEventListener('click', () => {
       this.closeSidebar();
       this.dispatchEvent('resetAllGames');
@@ -115,6 +121,7 @@ export class UI {
     this.elements.navFlags.classList.remove('active');
     this.elements.navRegion.classList.remove('active');
     this.elements.navLearning.classList.remove('active');
+    this.elements.navCapital.classList.remove('active');
 
     // Добавляем active к выбранной кнопке
     activeItem.classList.add('active');
@@ -358,6 +365,68 @@ export class UI {
     });
   }
 
+  displayCapitalQuestion(question, options) {
+    // Check if question exists
+    if (!question || !question.flag_url) {
+      console.error('Invalid question data:', question);
+      return;
+    }
+
+    // Сбрасываем флаг показа ответа
+    this.isAnswerShown = false;
+
+    // Set flag image with fallback handling
+    this.elements.flag.alt = `Флаг ${question.name}`;
+    this.elements.flag.style.display = 'block';
+
+    // Try to load the flag with multiple fallback strategies
+    this.loadFlagWithFallback(question);
+
+    // Set question text to show country name
+    this.elements.question.textContent = `Какая столица у ${question.name}?`;
+
+    // Показываем сердечки для режима выживания
+    if (this.currentMode === 'survival') {
+      this.showLivesIndicator();
+    }
+
+    // Clear and create options
+    this.elements.options.innerHTML = '';
+
+    // Добавляем кнопку-глазик для режима столиц
+    this.addToggleAnswersButton();
+
+    options.forEach((option, index) => {
+      const button = document.createElement('button');
+      button.className = 'option-btn';
+      button.textContent = option; // option здесь - это строка с названием столицы
+      button.dataset.capital = option;
+
+      // Скрываем ответы по умолчанию
+      button.classList.add('answer-hidden');
+
+      button.addEventListener('click', () => {
+        // Блокируем клики по скрытым кнопкам
+        if (button.classList.contains('answer-hidden')) {
+          return;
+        }
+
+        // Если ответ уже показан - переходим к следующему вопросу
+        if (this.isAnswerShown) {
+          this.dispatchEvent('nextQuestion');
+          return;
+        }
+
+        // Only allow answering if game is in Question state
+        if (this.gameLogic && this.gameLogic.getState().currentState === 'Question') {
+          this.dispatchEvent('answerQuestion', option);
+        }
+      });
+
+      this.elements.options.appendChild(button);
+    });
+  }
+
   addToggleAnswersButton() {
     // Удаляем существующую кнопку если есть
     const existingButton = document.querySelector('.toggle-answers-btn');
@@ -426,13 +495,16 @@ export class UI {
     this.isAnswerShown = true;
 
     // Показываем ответы при результате для режимов с скрытыми ответами
-    if (['classic', 'survival', 'region'].includes(this.currentMode)) {
+    if (['classic', 'survival', 'region', 'capital'].includes(this.currentMode)) {
       this.showAnswers();
     }
 
     if (this.currentMode === 'flags') {
       // Для режима флагов - подсвечиваем флаги
       this.highlightFlags(result);
+    } else if (this.currentMode === 'capital') {
+      // Для режима столиц - подсвечиваем кнопки столиц
+      this.highlightCapitalButtons(result);
     } else {
       // Для обычного режима - подсвечиваем кнопки ответов
       this.highlightAnswerButtons(result);
@@ -1154,6 +1226,32 @@ export class UI {
         // Правильный ответ - зеленый
         button.classList.add('correct-answer');
       } else if (countryName === selectedAnswer.name) {
+        // Выбранный неправильный ответ - красный
+        button.classList.add('incorrect-answer');
+      } else {
+        // Остальные кнопки - серый
+        button.classList.add('other-answer');
+      }
+
+      // Делаем кнопки кликабельными для следующего вопроса
+      button.style.cursor = 'pointer';
+    });
+  }
+
+  highlightCapitalButtons(result) {
+    const { isCorrect, correctAnswer, selectedAnswer } = result;
+    const buttons = document.querySelectorAll('.option-btn');
+
+    buttons.forEach((button) => {
+      const capitalName = button.dataset.capital;
+
+      // Сбрасываем стили
+      button.classList.remove('correct-answer', 'incorrect-answer', 'other-answer');
+
+      if (capitalName === correctAnswer) {
+        // Правильный ответ - зеленый
+        button.classList.add('correct-answer');
+      } else if (capitalName === selectedAnswer) {
         // Выбранный неправильный ответ - красный
         button.classList.add('incorrect-answer');
       } else {

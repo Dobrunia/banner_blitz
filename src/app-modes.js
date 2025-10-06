@@ -8,6 +8,7 @@ import {
   FlagsMode,
   RegionMode,
   LearningMode,
+  CapitalMode,
 } from './game-modes/index.js';
 import { UI } from './ui.js';
 
@@ -21,6 +22,7 @@ class FlagQuizAppModes {
       flags: new FlagsMode(this.countriesAPI),
       region: new RegionMode(this.countriesAPI),
       learning: new LearningMode(this.countriesAPI),
+      capital: new CapitalMode(this.countriesAPI),
     };
     this.currentMode = 'classic'; // по умолчанию классический режим
     this.ui = new UI(this.gameModes[this.currentMode]);
@@ -58,6 +60,7 @@ class FlagQuizAppModes {
     document.addEventListener('switchToFlagsMode', () => this.switchToMode('flags'));
     document.addEventListener('switchToRegionMode', () => this.switchToMode('region'));
     document.addEventListener('switchToLearningMode', () => this.switchToMode('learning'));
+    document.addEventListener('switchToCapitalMode', () => this.switchToMode('capital'));
     document.addEventListener('selectRegion', (e) => this.selectRegion(e.detail));
     document.addEventListener('resetAllGames', () => this.resetAllGames());
 
@@ -152,6 +155,12 @@ class FlagQuizAppModes {
             this.ui.showLearningQuestion(country);
           }
           // В режиме обучения не показываем счетчик
+        } else if (this.currentMode === 'capital') {
+          this.ui.showGame();
+          this.updateScore();
+          if (state.currentQuestion && state.options) {
+            this.ui.displayCapitalQuestion(state.currentQuestion, state.options);
+          }
         } else {
           this.ui.showGame();
           this.updateScore();
@@ -239,6 +248,8 @@ class FlagQuizAppModes {
       this.ui.setActiveNavItem(this.ui.elements.navFlags);
     } else if (mode === 'region') {
       this.ui.setActiveNavItem(this.ui.elements.navRegion);
+    } else if (mode === 'capital') {
+      this.ui.setActiveNavItem(this.ui.elements.navCapital);
     }
 
     this.startGame();
