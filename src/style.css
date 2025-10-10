@@ -149,6 +149,91 @@ body {
   box-shadow: 0 4px 12px var(--shadow);
 }
 
+/* Navigation Groups */
+.nav-group {
+  margin: 5px 0;
+  border-radius: 12px;
+  background: var(--bg-tertiary);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  width: 100%;
+  display: block;
+}
+
+.nav-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  background: var(--bg-secondary);
+  border: none;
+  width: 100%;
+  text-align: left;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+}
+
+.nav-group-header:hover {
+  background: var(--bg-primary);
+}
+
+.nav-group-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-group-toggle {
+  font-size: 12px;
+  transition: transform 0.3s ease;
+  color: var(--text-secondary);
+}
+
+.nav-group.expanded .nav-group-toggle {
+  transform: rotate(180deg);
+}
+
+.nav-group-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  width: 100%;
+}
+
+.nav-group.expanded .nav-group-content {
+  max-height: 500px;
+}
+
+.nav-group-content .nav-item {
+  margin: 0;
+  border-radius: 0;
+  padding: 12px 20px 12px 32px;
+  font-size: 16px;
+  background: transparent;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+  width: 100%;
+  display: block;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.nav-group-content .nav-item:hover {
+  background: var(--bg-primary);
+  border-left-color: var(--accent);
+}
+
+.nav-group-content .nav-item.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-left-color: #fff;
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
 /* Overlay */
 .overlay {
   position: fixed;

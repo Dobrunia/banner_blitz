@@ -50,6 +50,9 @@ export class UI {
     this.elements.burger.addEventListener('click', () => this.toggleSidebar());
     // this.elements.closeSidebar.addEventListener('click', () => this.closeSidebar());
     this.elements.overlay.addEventListener('click', () => this.closeSidebar());
+
+    // Setup navigation groups
+    this.setupNavigationGroups();
     this.elements.navClassic.addEventListener('click', () => {
       this.setActiveNavItem(this.elements.navClassic);
       this.closeSidebar();
@@ -89,6 +92,36 @@ export class UI {
       this.closeSidebar();
       this.dispatchEvent('resetAllGames');
     });
+  }
+
+  setupNavigationGroups() {
+    // Находим все группы навигации
+    const navGroups = document.querySelectorAll('.nav-group');
+
+    navGroups.forEach((group) => {
+      const header = group.querySelector('.nav-group-header');
+      const content = group.querySelector('.nav-group-content');
+
+      // Добавляем обработчик клика на заголовок группы
+      header.addEventListener('click', () => {
+        this.toggleNavGroup(group);
+      });
+
+      // Группа "География" открыта по умолчанию
+      if (group.querySelector('.nav-group-title').textContent.includes('География')) {
+        group.classList.add('expanded');
+      }
+    });
+  }
+
+  toggleNavGroup(group) {
+    const isExpanded = group.classList.contains('expanded');
+
+    if (isExpanded) {
+      group.classList.remove('expanded');
+    } else {
+      group.classList.add('expanded');
+    }
   }
 
   toggleSidebar() {
