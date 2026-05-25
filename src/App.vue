@@ -19,6 +19,7 @@ const controller = createGameController();
 const { theme, toggleTheme } = useTheme();
 const sidebarOpen = ref(false);
 const geographyExpanded = ref(true);
+const artExpanded = ref(true);
 
 function closeSidebar(): void {
   sidebarOpen.value = false;
@@ -63,8 +64,10 @@ onUnmounted(() => {
     :current-mode="controller.currentMode.value"
     :theme="theme"
     :geography-expanded="geographyExpanded"
+    :art-expanded="artExpanded"
     @toggle-theme="toggleTheme"
     @toggle-geography="geographyExpanded = !geographyExpanded"
+    @toggle-art="artExpanded = !artExpanded"
     @switch-mode="switchMode"
     @reset-all="resetAll"
   />
@@ -108,6 +111,9 @@ onUnmounted(() => {
           :mode="controller.currentMode.value!"
           :phase="controller.gamePhase.value"
           :question="controller.currentQuestion.value"
+          :question-media="controller.questionMedia.value"
+          :question-prompt="controller.questionPrompt.value"
+          :question-key="controller.questionKey.value"
           :options="controller.options.value"
           :result="controller.lastResult.value"
           :stats="controller.stats.value"

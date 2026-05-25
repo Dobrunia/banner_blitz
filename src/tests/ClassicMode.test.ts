@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ClassicMode } from '../game-modes/ClassicMode';
+import { ClassicMode } from '../game-modes/flags/ClassicMode';
 import type { CountriesAPI } from '../services/CountriesAPI';
 import type { Country } from '../types/country';
 

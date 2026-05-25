@@ -1,6 +1,15 @@
 import type { Country, RegionName } from './country';
+import type { QuizMedia } from './quiz-ui';
 
-export type GameModeId = 'classic' | 'time' | 'survival' | 'flags' | 'region' | 'learning' | 'capital';
+export type GameModeId =
+  | 'classic'
+  | 'time'
+  | 'survival'
+  | 'flags'
+  | 'region'
+  | 'learning'
+  | 'capital'
+  | 'art-guess-artist';
 
 export type GameStateName = 'Idle' | 'Loading' | 'Ready' | 'RegionSelection' | 'Learning' | 'Question' | 'Result';
 
@@ -26,6 +35,8 @@ export interface GameState<TOption = Country | string, TAnswer = Country | strin
   options: TOption[];
   correctAnswer: TAnswer | null;
   isAnswered: boolean;
+  quizMedia?: QuizMedia | null;
+  questionKey?: string | null;
 }
 
 export interface AnswerResult<TAnswer = Country | string> {

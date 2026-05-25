@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CountriesAPI } from '../services/CountriesAPI';
-import { TimeMode } from '../game-modes/TimeMode';
+import { TimeMode } from '../game-modes/flags/TimeMode';
 import type { Country } from '../types/country';
 
 describe('TimeMode', () => {

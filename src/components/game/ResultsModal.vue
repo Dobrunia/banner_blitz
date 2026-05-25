@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { MODE_LABELS } from '../../constants/gameModes';
 import type { GameStats } from '../../types/game';
 
 const props = defineProps<{
@@ -11,17 +12,11 @@ defineEmits<{
 }>();
 
 function modeTitle(): string {
-  const titles = {
-    classic: '📚 Классический режим',
-    time: '⏰ Режим "На время"',
-    survival: '❤️ Режим "На выживание"',
-    flags: '🏳️ Режим "4 Флага"',
-    region: `🌍 Режим "Регионы"${props.stats.selectedRegion ? ` (${props.stats.selectedRegion})` : ''}`,
-    learning: '📖 Режим обучения',
-    capital: '🏛️ Режим "Столицы"',
-  };
+  if (props.stats.mode === 'region' && props.stats.selectedRegion) {
+    return `${MODE_LABELS.region} (${props.stats.selectedRegion})`;
+  }
 
-  return titles[props.stats.mode];
+  return MODE_LABELS[props.stats.mode];
 }
 
 async function share(): Promise<void> {

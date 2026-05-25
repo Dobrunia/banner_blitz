@@ -1,14 +1,17 @@
 import { computed, ref } from 'vue';
 import { CountriesAPI } from '../services/CountriesAPI';
+import { PaintingsAPI } from '../services/PaintingsAPI';
 import {
   CapitalMode,
   ClassicMode,
   FlagsMode,
   LearningMode,
+  PaintingArtistMode,
   RegionMode,
   SurvivalMode,
   TimeMode,
 } from '../game-modes';
+import { quizMediaFromCountry } from '../utils/quizMedia';
 import { MODE_LABELS } from '../constants/gameModes';
 import type { Country, RegionName } from '../types/country';
 import type { AnswerResult, GameMode, GameModeId, GamePhase, GameState, GameStats } from '../types/game';
@@ -35,6 +38,7 @@ const phaseByState: Record<GameState['currentState'], GamePhase> = {
 
 export function createGameController() {
   const countriesAPI = new CountriesAPI();
+  const paintingsAPI = new PaintingsAPI();
   const gameModes: ModeMap = {
     time: new TimeMode(countriesAPI, 30),
     survival: new SurvivalMode(countriesAPI),
@@ -43,6 +47,7 @@ export function createGameController() {
     region: new RegionMode(countriesAPI),
     learning: new LearningMode(countriesAPI),
     capital: new CapitalMode(countriesAPI),
+    'art-guess-artist': new PaintingArtistMode(paintingsAPI),
   };
 
   const currentMode = ref<GameModeId | null>(null);
@@ -54,6 +59,8 @@ export function createGameController() {
     options: [],
     correctAnswer: null,
     isAnswered: false,
+    quizMedia: null,
+    questionKey: null,
   });
   const stats = ref<GameStats>({ ...DEFAULT_STATS });
   const lastResult = ref<AnswerResult | null>(null);
@@ -106,6 +113,31 @@ export function createGameController() {
   );
 
   const currentQuestion = computed(() => state.value.currentQuestion);
+  const questionMedia = computed(
+    () => state.value.quizMedia ?? quizMediaFromCountry(state.value.currentQuestion)
+  );
+  const questionPrompt = computed(() => {
+    if (currentMode.value === 'capital' && state.value.currentQuestion) {
+      return `Какая столица у ${state.value.currentQuestion.name}?`;
+    }
+
+    if (currentMode.value === 'learning' && state.value.currentQuestion) {
+      return state.value.currentQuestion.name;
+    }
+
+    if (currentMode.value === 'art-guess-artist') {
+      return 'Кто автор этой картины?';
+    }
+
+    if (state.value.currentQuestion) {
+      return 'Какая это страна?';
+    }
+
+    return '';
+  });
+  const questionKey = computed(
+    () => state.value.questionKey ?? state.value.currentQuestion?.name ?? null
+  );
   const options = computed(() => state.value.options);
   const scoreText = computed(() => {
     if (!currentMode.value) return '';
@@ -126,6 +158,10 @@ export function createGameController() {
     try {
       if (!countriesAPI.isReady()) {
         await countriesAPI.loadCountries();
+      }
+
+      if (!paintingsAPI.isReady()) {
+        await paintingsAPI.loadPaintings();
       }
 
       currentMode.value = null;
@@ -218,6 +254,8 @@ export function createGameController() {
       options: [],
       correctAnswer: null,
       isAnswered: false,
+      quizMedia: null,
+      questionKey: null,
     };
   }
 
@@ -235,6 +273,9 @@ export function createGameController() {
     resultsModal,
     errorMessage,
     currentQuestion,
+    questionMedia,
+    questionPrompt,
+    questionKey,
     options,
     scoreText,
     init,

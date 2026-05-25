@@ -15,6 +15,7 @@ export const MODES_WITH_AUTO_COUNTDOWN: readonly GameModeId[] = [
   'flags',
   'region',
   'capital',
+  'art-guess-artist',
 ];
 
 export function usesAnswerToggle(mode: GameModeId): boolean {

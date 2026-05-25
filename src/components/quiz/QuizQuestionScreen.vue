@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { quizMediaFromCountry } from '../../utils/quizMedia';
 import type { Country } from '../../types/country';
 import type { AnswerResult, GameModeId, GamePhase, GameStats } from '../../types/game';
+import type { QuizMedia } from '../../types/quiz-ui';
 import LearningPanel from '../game/LearningPanel.vue';
 import LivesIndicator from '../game/LivesIndicator.vue';
 import QuizAnswerFooter from './QuizAnswerFooter.vue';
@@ -12,6 +12,9 @@ const props = defineProps<{
   mode: GameModeId;
   phase: GamePhase;
   question: Country | null;
+  questionMedia: QuizMedia | null;
+  questionPrompt: string;
+  questionKey: string | null;
   options: Array<Country | string>;
   result: AnswerResult | null;
   stats: GameStats;
@@ -23,20 +26,17 @@ defineEmits<{
 }>();
 
 const isPaused = computed(() => props.mode === 'time' && props.phase === 'result');
-const questionMedia = computed(() => quizMediaFromCountry(props.question));
-
-const promptText = computed(() => {
-  if (!props.question) return '';
-  if (props.mode === 'capital') return `Какая столица у ${props.question.name}?`;
-  if (props.mode === 'learning') return props.question.name;
-  return 'Какая это страна?';
-});
+const isArtMode = computed(() => props.mode === 'art-guess-artist');
 </script>
 
 <template>
   <div
     class="quiz-question-screen"
-    :class="{ 'quiz-question-screen--paused': isPaused, 'quiz-question-screen--learning': mode === 'learning' }"
+    :class="{
+      'quiz-question-screen--paused': isPaused,
+      'quiz-question-screen--learning': mode === 'learning',
+      'quiz-question-screen--art': isArtMode,
+    }"
   >
     <main class="quiz-question-screen__main">
       <div class="quiz-question-screen__content">
@@ -48,7 +48,7 @@ const promptText = computed(() => {
           <QuizMediaDisplay :media="questionMedia" />
         </div>
 
-        <h2 class="quiz-question-screen__prompt">{{ promptText }}</h2>
+        <h2 class="quiz-question-screen__prompt">{{ questionPrompt }}</h2>
       </div>
     </main>
 
@@ -61,7 +61,7 @@ const promptText = computed(() => {
         :phase="phase"
         :options="options"
         :result="result"
-        :question-key="question?.name"
+        :question-key="questionKey"
         @answer="$emit('answer', $event)"
         @next="$emit('next')"
       />
@@ -173,5 +173,10 @@ const promptText = computed(() => {
     height: 180px;
     margin-inline: auto;
   }
+}
+
+.quiz-question-screen--art .quiz-question-screen__media {
+  width: min(88vw, 420px);
+  height: min(52vw, 280px);
 }
 </style>
