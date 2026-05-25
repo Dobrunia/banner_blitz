@@ -66,10 +66,6 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
-      - name: Install Capacitor
-        run: |
-          npm install --no-audit --no-fund @capacitor/cli@latest @capacitor/android@latest
-
       - name: Build web app
         run: npm run build
 
