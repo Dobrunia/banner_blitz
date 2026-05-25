@@ -1,16 +1,21 @@
-// Режим игры "На время"
-import { BaseGameMode } from './BaseGameMode.js';
+import { BaseGameMode } from './BaseGameMode';
+import type { CountriesAPI } from '../services/CountriesAPI';
+import type { Country } from '../types/country';
+import type { AnswerResult, GameStats, TimeListener } from '../types/game';
 
-export class TimeMode extends BaseGameMode {
-  constructor(countriesAPI, timeLimit = 30) {
+export class TimeMode extends BaseGameMode<Country, Country> {
+  private readonly timeLimit: number;
+  private timeLeft: number;
+  private timer: ReturnType<typeof setInterval> | null = null;
+  private active = false;
+
+  constructor(countriesAPI: CountriesAPI, timeLimit = 30) {
     super(countriesAPI);
-    this.timeLimit = timeLimit; // время в секундах
+    this.timeLimit = timeLimit;
     this.timeLeft = timeLimit;
-    this.timer = null;
-    this.isGameActive = false;
   }
 
-  async startGame() {
+  async startGame(): Promise<void> {
     this.setState('Loading');
 
     try {
@@ -20,9 +25,8 @@ export class TimeMode extends BaseGameMode {
 
       this.resetScore();
       this.timeLeft = this.timeLimit;
-      this.isGameActive = false; // Не запускаем сразу
-
-      this.setState('Ready'); // Готов к старту
+      this.active = false;
+      this.setState('Ready');
     } catch (error) {
       console.error('Error starting time mode game:', error);
       this.setState('Idle');
@@ -30,13 +34,13 @@ export class TimeMode extends BaseGameMode {
     }
   }
 
-  async beginGame() {
-    this.isGameActive = true;
+  async beginGame(): Promise<void> {
+    this.active = true;
     await this.generateQuestion();
     this.startTimer();
   }
 
-  resetGame() {
+  resetGame(): void {
     this.stopTimer();
     this.resetScore();
     this.state.currentQuestion = null;
@@ -44,21 +48,16 @@ export class TimeMode extends BaseGameMode {
     this.state.correctAnswer = null;
     this.state.isAnswered = false;
     this.timeLeft = this.timeLimit;
-    this.isGameActive = false;
+    this.active = false;
     this.setState('Loading');
   }
 
-  async generateQuestion() {
+  async generateQuestion(): Promise<void> {
     try {
-      // Получаем случайную страну, избегая повторений
       const correctCountry = this.getRandomCountryAvoidingUsed();
-
-      // Получаем 3 неправильных варианта
       const wrongOptions = this.countriesAPI.getRandomCountries(3, correctCountry);
 
-      // Создаем массив вариантов и перемешиваем
       this.state.options = [correctCountry, ...wrongOptions].sort(() => Math.random() - 0.5);
-
       this.state.currentQuestion = correctCountry;
       this.state.correctAnswer = correctCountry;
       this.state.isAnswered = false;
@@ -70,8 +69,8 @@ export class TimeMode extends BaseGameMode {
     }
   }
 
-  answerQuestion(selectedCountry) {
-    if (this.state.isAnswered || !this.state.correctAnswer || !this.isGameActive) {
+  answerQuestion(selectedCountry: Country): AnswerResult<Country> | null {
+    if (this.state.isAnswered || !this.state.correctAnswer || !this.active) {
       return null;
     }
 
@@ -84,12 +83,11 @@ export class TimeMode extends BaseGameMode {
       this.state.score.correct++;
     } else {
       this.state.score.incorrect++;
-      // Штраф за неправильный ответ - отнимаем 2 секунды
       this.timeLeft = Math.max(0, this.timeLeft - 2);
     }
 
+    this.pauseTimer();
     this.setState('Result');
-    this.notifyListeners();
 
     return {
       isCorrect,
@@ -98,73 +96,81 @@ export class TimeMode extends BaseGameMode {
     };
   }
 
-  nextQuestion() {
-    if (!this.isGameActive) {
+  nextQuestion(): boolean {
+    if (!this.active) {
       return false;
     }
 
-    // Если время еще есть, генерируем новый вопрос
     if (this.timeLeft > 0) {
-      this.generateQuestion();
+      void this.generateQuestion();
+      this.resumeTimer();
       return true;
-    } else {
-      // Время закончилось
-      this.endGame();
-      return false;
     }
+
+    this.endGame();
+    return false;
   }
 
-  startTimer() {
+  startTimer(): void {
+    this.stopTimer();
     this.timer = setInterval(() => {
-      if (this.isGameActive) {
-        this.timeLeft--;
+      if (!this.active) return;
 
-        // Уведомляем слушателей об обновлении времени (только время, без перерисовки)
-        this.notifyTimeUpdate();
+      this.timeLeft--;
+      this.notifyTimeUpdate();
 
-        if (this.timeLeft <= 0) {
-          this.endGame();
-        }
+      if (this.timeLeft <= 0) {
+        this.endGame();
       }
     }, 1000);
   }
 
-  stopTimer() {
+  pauseTimer(): void {
+    this.stopTimer();
+  }
+
+  resumeTimer(): void {
+    if (this.active && this.timeLeft > 0 && !this.timer) {
+      this.startTimer();
+    }
+  }
+
+  stopTimer(): void {
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
     }
   }
 
-  endGame() {
+  endGame(): void {
     this.stopTimer();
-    this.isGameActive = false;
+    this.active = false;
     this.setState('Idle');
   }
 
-  // Уведомляем только об обновлении времени (без полной перерисовки)
-  notifyTimeUpdate() {
+  notifyTimeUpdate(): void {
     this.listeners.forEach((listener) => {
-      if (listener.onTimeUpdate) {
-        listener.onTimeUpdate(this.timeLeft, this.state.score.correct);
+      if (typeof listener !== 'function' && 'onTimeUpdate' in listener) {
+        (listener as TimeListener).onTimeUpdate(this.timeLeft, this.state.score.correct);
       }
     });
   }
 
-  getTimeLeft() {
+  getTimeLeft(): number {
     return this.timeLeft;
   }
 
-  getTimeLimit() {
+  getTimeLimit(): number {
     return this.timeLimit;
   }
 
-  isGameActive() {
-    return this.isGameActive;
+  isActive(): boolean {
+    return this.active;
   }
 
-  getGameStats() {
+  getGameStats(): GameStats {
     const totalCountries = this.countriesAPI.getCountries().length;
+
     return {
       score: this.getScore(),
       timeLeft: this.timeLeft,
@@ -174,7 +180,7 @@ export class TimeMode extends BaseGameMode {
         this.state.score.total > 0
           ? Math.round((this.state.score.correct / this.state.score.total) * 100)
           : 0,
-      isFinished: !this.isGameActive,
+      isFinished: !this.active,
       mode: 'time',
     };
   }

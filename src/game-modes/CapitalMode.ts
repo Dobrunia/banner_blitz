@@ -1,13 +1,14 @@
-// Режим угадывания столиц (показывается флаг + название страны, нужно угадать столицу)
-import { BaseGameMode } from './BaseGameMode.js';
+import { BaseGameMode } from './BaseGameMode';
+import type { CountriesAPI } from '../services/CountriesAPI';
+import type { Country } from '../types/country';
+import type { AnswerResult, GameStats } from '../types/game';
 
-export class CapitalMode extends BaseGameMode {
-  constructor(countriesAPI) {
+export class CapitalMode extends BaseGameMode<string, string> {
+  constructor(countriesAPI: CountriesAPI) {
     super(countriesAPI);
-    this.usedCountries = new Set(); // отслеживаем использованные страны
   }
 
-  async startGame() {
+  async startGame(): Promise<void> {
     this.setState('Loading');
 
     try {
@@ -16,7 +17,6 @@ export class CapitalMode extends BaseGameMode {
       }
 
       this.resetScore();
-      this.usedCountries.clear();
       await this.generateQuestion();
     } catch (error) {
       console.error('Error starting capital mode game:', error);
@@ -25,40 +25,30 @@ export class CapitalMode extends BaseGameMode {
     }
   }
 
-  async beginGame() {
-    // Для режима столиц сразу начинаем игру
+  async beginGame(): Promise<void> {
     await this.generateQuestion();
   }
 
-  resetGame() {
+  resetGame(): void {
     this.resetScore();
     this.state.currentQuestion = null;
     this.state.options = [];
     this.state.correctAnswer = null;
     this.state.isAnswered = false;
-    this.usedCountries.clear();
     this.setState('Loading');
   }
 
-  async generateQuestion() {
+  async generateQuestion(): Promise<void> {
     try {
-      // Получаем случайную страну, избегая повторений
       const correctCountry = this.getRandomCountryAvoidingUsed();
 
-      // Проверяем, что у страны есть столица
       if (!correctCountry.capital) {
-        // Если у страны нет столицы, берем другую
         return this.generateQuestion();
       }
 
-      // Получаем 3 неправильных варианта столиц
       const wrongCapitals = this.getRandomCapitals(3, correctCountry.capital);
 
-      // Создаем массив вариантов и перемешиваем
-      this.state.options = [correctCountry.capital, ...wrongCapitals].sort(
-        () => Math.random() - 0.5
-      );
-
+      this.state.options = [correctCountry.capital, ...wrongCapitals].sort(() => Math.random() - 0.5);
       this.state.currentQuestion = correctCountry;
       this.state.correctAnswer = correctCountry.capital;
       this.state.isAnswered = false;
@@ -70,19 +60,17 @@ export class CapitalMode extends BaseGameMode {
     }
   }
 
-  getRandomCapitals(count, excludeCapital) {
-    const allCountries = this.countriesAPI.getCountries();
-    const capitals = allCountries
+  getRandomCapitals(count: number, excludeCapital: string): string[] {
+    const capitals = this.countriesAPI
+      .getCountries()
       .map((country) => country.capital)
-      .filter((capital) => capital && capital !== excludeCapital)
-      .filter((capital, index, arr) => arr.indexOf(capital) === index); // убираем дубликаты
+      .filter((capital): capital is string => Boolean(capital) && capital !== excludeCapital)
+      .filter((capital, index, all) => all.indexOf(capital) === index);
 
-    // Перемешиваем и берем нужное количество
-    const shuffled = [...capitals].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, count);
+    return [...capitals].sort(() => Math.random() - 0.5).slice(0, count);
   }
 
-  answerQuestion(selectedCapital) {
+  answerQuestion(selectedCapital: string): AnswerResult<string> | null {
     if (this.state.isAnswered || !this.state.correctAnswer) {
       return null;
     }
@@ -99,7 +87,6 @@ export class CapitalMode extends BaseGameMode {
     }
 
     this.setState('Result');
-    this.notifyListeners();
 
     return {
       isCorrect,
@@ -108,27 +95,26 @@ export class CapitalMode extends BaseGameMode {
     };
   }
 
-  nextQuestion() {
+  nextQuestion(): boolean {
     const totalCountries = this.countriesAPI.getCountries().length;
 
-    // Если прошли все страны, игра окончена
     if (this.usedCountries.size >= totalCountries) {
       this.setState('Idle');
       return false;
     }
 
-    // Генерируем новый вопрос
-    this.generateQuestion();
+    void this.generateQuestion();
     return true;
   }
 
-  isGameFinished() {
+  isGameFinished(): boolean {
     const totalCountries = this.countriesAPI.getCountries().length;
     return this.usedCountries.size >= totalCountries;
   }
 
-  getGameStats() {
+  getGameStats(): GameStats {
     const totalCountries = this.countriesAPI.getCountries().length;
+
     return {
       score: this.getScore(),
       totalCountries,
@@ -140,5 +126,9 @@ export class CapitalMode extends BaseGameMode {
       isFinished: this.isGameFinished(),
       mode: 'capital',
     };
+  }
+
+  getCurrentCountry(): Country | null {
+    return this.state.currentQuestion;
   }
 }

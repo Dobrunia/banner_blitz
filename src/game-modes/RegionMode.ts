@@ -1,21 +1,24 @@
-// Режим игры "Регионы" - выбор региона и вопросы по нему
-import { BaseGameMode } from './BaseGameMode.js';
+import { BaseGameMode } from './BaseGameMode';
+import type { CountriesAPI } from '../services/CountriesAPI';
+import type { Country, RegionName } from '../types/country';
+import type { AnswerResult, GameStats } from '../types/game';
 
-export class RegionMode extends BaseGameMode {
-  constructor(countriesAPI) {
+export class RegionMode extends BaseGameMode<Country, Country> {
+  private selectedRegion: RegionName | null = null;
+  private readonly availableRegions: RegionName[] = [
+    'Европа',
+    'Азия',
+    'Африка',
+    'Северная Америка',
+    'Южная Америка',
+    'Океания',
+  ];
+
+  constructor(countriesAPI: CountriesAPI) {
     super(countriesAPI);
-    this.selectedRegion = null;
-    this.availableRegions = [
-      'Европа',
-      'Азия',
-      'Африка',
-      'Северная Америка',
-      'Южная Америка',
-      'Океания',
-    ];
   }
 
-  async startGame() {
+  async startGame(): Promise<void> {
     this.setState('Loading');
 
     try {
@@ -33,7 +36,7 @@ export class RegionMode extends BaseGameMode {
     }
   }
 
-  resetGame() {
+  resetGame(): void {
     this.resetScore();
     this.state.currentQuestion = null;
     this.state.options = [];
@@ -43,28 +46,24 @@ export class RegionMode extends BaseGameMode {
     this.setState('Loading');
   }
 
-  selectRegion(region) {
+  selectRegion(region: RegionName): void {
     this.selectedRegion = region;
-    this.generateQuestion();
+    void this.generateQuestion();
   }
 
-  async generateQuestion() {
+  async generateQuestion(): Promise<void> {
     try {
       if (!this.selectedRegion) {
         throw new Error('No region selected');
       }
 
-      // Получаем страны выбранного региона
-      const regionCountries = this.countriesAPI
-        .getCountries()
-        .filter((country) => country.region === this.selectedRegion);
+      const regionCountries = this.getRegionCountries();
 
       if (regionCountries.length === 0) {
         throw new Error(`No countries found for region: ${this.selectedRegion}`);
       }
 
-      // Получаем случайную страну из региона, избегая повторений
-      let correctCountry;
+      let correctCountry: Country;
       let attempts = 0;
       const maxAttempts = 100;
 
@@ -74,22 +73,17 @@ export class RegionMode extends BaseGameMode {
         attempts++;
       } while (this.usedCountries.has(correctCountry.name) && attempts < maxAttempts);
 
-      // Если все страны региона использованы, сбрасываем список
       if (attempts >= maxAttempts) {
         this.usedCountries.clear();
         const randomIndex = Math.floor(Math.random() * regionCountries.length);
         correctCountry = regionCountries[randomIndex];
       }
 
-      // Отмечаем страну как использованную
       this.usedCountries.add(correctCountry.name);
 
-      // Получаем 3 неправильных варианта из того же региона
       const wrongOptions = this.getRandomCountriesFromRegion(3, correctCountry, regionCountries);
 
-      // Создаем массив вариантов и перемешиваем
       this.state.options = [correctCountry, ...wrongOptions].sort(() => Math.random() - 0.5);
-
       this.state.currentQuestion = correctCountry;
       this.state.correctAnswer = correctCountry;
       this.state.isAnswered = false;
@@ -101,20 +95,14 @@ export class RegionMode extends BaseGameMode {
     }
   }
 
-  getRandomCountriesFromRegion(count, exclude, regionCountries) {
-    let availableCountries = regionCountries;
-
-    // Exclude specific country if provided
-    if (exclude) {
-      availableCountries = regionCountries.filter((country) => country.name !== exclude.name);
-    }
-
-    // Shuffle and take the requested number
-    const shuffled = [...availableCountries].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, count);
+  getRandomCountriesFromRegion(count: number, exclude: Country, regionCountries: Country[]): Country[] {
+    return regionCountries
+      .filter((country) => country.name !== exclude.name)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, count);
   }
 
-  answerQuestion(selectedCountry) {
+  answerQuestion(selectedCountry: Country): AnswerResult<Country> | null {
     if (this.state.isAnswered || !this.state.correctAnswer) {
       return null;
     }
@@ -131,7 +119,6 @@ export class RegionMode extends BaseGameMode {
     }
 
     this.setState('Result');
-    this.notifyListeners();
 
     return {
       isCorrect,
@@ -140,44 +127,31 @@ export class RegionMode extends BaseGameMode {
     };
   }
 
-  nextQuestion() {
-    // Проверяем, есть ли еще страны в регионе
-    const regionCountries = this.countriesAPI
-      .getCountries()
-      .filter((country) => country.region === this.selectedRegion);
-
-    if (this.usedCountries.size >= regionCountries.length) {
+  nextQuestion(): boolean {
+    if (this.usedCountries.size >= this.getRegionCountries().length) {
       this.setState('Idle');
-      return false; // Все страны региона пройдены
+      return false;
     }
 
-    // Генерируем новый вопрос
-    this.generateQuestion();
+    void this.generateQuestion();
     return true;
   }
 
-  getAvailableRegions() {
+  getAvailableRegions(): RegionName[] {
     return this.availableRegions;
   }
 
-  getSelectedRegion() {
+  getSelectedRegion(): RegionName | null {
     return this.selectedRegion;
   }
 
-  isGameFinished() {
+  isGameFinished(): boolean {
     if (!this.selectedRegion) return false;
-
-    const regionCountries = this.countriesAPI
-      .getCountries()
-      .filter((country) => country.region === this.selectedRegion);
-
-    return this.usedCountries.size >= regionCountries.length;
+    return this.usedCountries.size >= this.getRegionCountries().length;
   }
 
-  getGameStats() {
-    const regionCountries = this.countriesAPI
-      .getCountries()
-      .filter((country) => country.region === this.selectedRegion);
+  getGameStats(): GameStats {
+    const regionCountries = this.getRegionCountries();
 
     return {
       score: this.getScore(),
@@ -191,5 +165,11 @@ export class RegionMode extends BaseGameMode {
       isFinished: this.isGameFinished(),
       mode: 'region',
     };
+  }
+
+  private getRegionCountries(): Country[] {
+    return this.countriesAPI
+      .getCountries()
+      .filter((country) => country.region === this.selectedRegion);
   }
 }

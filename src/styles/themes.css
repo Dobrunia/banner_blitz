@@ -1,0 +1,57 @@
+:root {
+  --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --bg-secondary: rgba(255, 255, 255, 0.1);
+  --bg-tertiary: rgba(255, 255, 255, 0.2);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.8);
+  --text-muted: #666666;
+  --text-muted-strong: #333333;
+  --border-color: rgba(255, 255, 255, 0.2);
+  --shadow: rgba(0, 0, 0, 0.3);
+  --shadow-soft: rgba(0, 0, 0, 0.15);
+  --accent: #4caf50;
+  --accent-hover: #45a049;
+  --danger: #ff4757;
+  --warning: #ffa502;
+
+  --gradient-app: linear-gradient(135deg, #667eea, #764ba2);
+  --gradient-accent: linear-gradient(135deg, #4caf50, #45a049);
+  --gradient-accent-active: linear-gradient(135deg, #45a049, #4caf50);
+  --gradient-info: linear-gradient(135deg, #2196f3, #1976d2);
+  --gradient-info-active: linear-gradient(135deg, #1976d2, #1565c0);
+
+  --color-answer-correct: #4ade80;
+  --color-answer-correct-strong: #16a34a;
+  --color-answer-wrong: #f87171;
+  --color-answer-wrong-strong: #dc2626;
+  --color-answer-muted: #9ca3af;
+  --color-answer-muted-strong: #4b5563;
+  --color-score-highlight: var(--accent);
+  --color-placeholder-bg: #f0f0f0;
+  --color-placeholder-border: #cccccc;
+  --color-flag-wrong: #f44336;
+  --color-flag-muted: #9e9e9e;
+}
+
+[data-theme='dark'] {
+  --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  --bg-secondary: rgba(0, 0, 0, 0.3);
+  --bg-tertiary: rgba(0, 0, 0, 0.5);
+  --text-primary: #e0e0e0;
+  --text-secondary: rgba(224, 224, 224, 0.7);
+  --text-muted: rgba(224, 224, 224, 0.65);
+  --text-muted-strong: #ffffff;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow: rgba(0, 0, 0, 0.6);
+  --shadow-soft: rgba(0, 0, 0, 0.35);
+  --accent: #00d4aa;
+  --accent-hover: #00b894;
+  --danger: #ff6b6b;
+  --warning: #feca57;
+
+  --gradient-accent: linear-gradient(135deg, #00d4aa, #00b894);
+  --gradient-accent-active: linear-gradient(135deg, #00b894, #00d4aa);
+  --color-score-highlight: var(--accent);
+  --color-placeholder-bg: rgba(255, 255, 255, 0.08);
+  --color-placeholder-border: rgba(255, 255, 255, 0.2);
+}

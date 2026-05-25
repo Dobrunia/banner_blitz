@@ -1,12 +1,14 @@
-// Режим игры "4 Флага → 1 Страна"
-import { BaseGameMode } from './BaseGameMode.js';
+import { BaseGameMode } from './BaseGameMode';
+import type { CountriesAPI } from '../services/CountriesAPI';
+import type { Country } from '../types/country';
+import type { AnswerResult, GameStats } from '../types/game';
 
-export class FlagsMode extends BaseGameMode {
-  constructor(countriesAPI) {
+export class ClassicMode extends BaseGameMode<Country, Country> {
+  constructor(countriesAPI: CountriesAPI) {
     super(countriesAPI);
   }
 
-  async startGame() {
+  async startGame(): Promise<void> {
     this.setState('Loading');
 
     try {
@@ -17,18 +19,17 @@ export class FlagsMode extends BaseGameMode {
       this.resetScore();
       await this.generateQuestion();
     } catch (error) {
-      console.error('Error starting flags mode game:', error);
+      console.error('Error starting classic mode game:', error);
       this.setState('Idle');
       throw error;
     }
   }
 
-  async beginGame() {
-    // Для режима флагов сразу начинаем игру
+  async beginGame(): Promise<void> {
     await this.generateQuestion();
   }
 
-  resetGame() {
+  resetGame(): void {
     this.resetScore();
     this.state.currentQuestion = null;
     this.state.options = [];
@@ -37,29 +38,24 @@ export class FlagsMode extends BaseGameMode {
     this.setState('Loading');
   }
 
-  async generateQuestion() {
+  async generateQuestion(): Promise<void> {
     try {
-      // Получаем случайную страну, избегая повторений
       const correctCountry = this.getRandomCountryAvoidingUsed();
-
-      // Получаем 3 неправильных варианта
       const wrongOptions = this.countriesAPI.getRandomCountries(3, correctCountry);
 
-      // Создаем массив вариантов и перемешиваем
       this.state.options = [correctCountry, ...wrongOptions].sort(() => Math.random() - 0.5);
-
       this.state.currentQuestion = correctCountry;
       this.state.correctAnswer = correctCountry;
       this.state.isAnswered = false;
 
       this.setState('Question');
     } catch (error) {
-      console.error('Error generating flags mode question:', error);
+      console.error('Error generating classic mode question:', error);
       throw error;
     }
   }
 
-  answerQuestion(selectedCountry) {
+  answerQuestion(selectedCountry: Country): AnswerResult<Country> | null {
     if (this.state.isAnswered || !this.state.correctAnswer) {
       return null;
     }
@@ -76,7 +72,6 @@ export class FlagsMode extends BaseGameMode {
     }
 
     this.setState('Result');
-    this.notifyListeners();
 
     return {
       isCorrect,
@@ -85,23 +80,36 @@ export class FlagsMode extends BaseGameMode {
     };
   }
 
-  nextQuestion() {
-    // Бесконечный режим - всегда генерируем новый вопрос
-    this.generateQuestion();
+  nextQuestion(): boolean {
+    const totalCountries = this.countriesAPI.getCountries().length;
+
+    if (this.usedCountries.size >= totalCountries) {
+      this.setState('Idle');
+      return false;
+    }
+
+    void this.generateQuestion();
     return true;
   }
 
-  getGameStats() {
+  isGameFinished(): boolean {
     const totalCountries = this.countriesAPI.getCountries().length;
+    return this.usedCountries.size >= totalCountries;
+  }
+
+  getGameStats(): GameStats {
+    const totalCountries = this.countriesAPI.getCountries().length;
+
     return {
       score: this.getScore(),
       totalCountries,
+      usedCountries: this.usedCountries.size,
       percentage:
         this.state.score.total > 0
           ? Math.round((this.state.score.correct / this.state.score.total) * 100)
           : 0,
-      isFinished: false, // Бесконечный режим
-      mode: 'flags',
+      isFinished: this.isGameFinished(),
+      mode: 'classic',
     };
   }
 }

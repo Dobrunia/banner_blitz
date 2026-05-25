@@ -1,14 +1,17 @@
-// Режим игры "На выживание" (бесконечный)
-import { BaseGameMode } from './BaseGameMode.js';
+import { BaseGameMode } from './BaseGameMode';
+import type { CountriesAPI } from '../services/CountriesAPI';
+import type { Country } from '../types/country';
+import type { AnswerResult, GameStats } from '../types/game';
 
-export class SurvivalMode extends BaseGameMode {
-  constructor(countriesAPI) {
+export class SurvivalMode extends BaseGameMode<Country, Country> {
+  private lives = 3;
+  private readonly maxLives = 3;
+
+  constructor(countriesAPI: CountriesAPI) {
     super(countriesAPI);
-    this.lives = 3; // количество жизней
-    this.maxLives = 3;
   }
 
-  async startGame() {
+  async startGame(): Promise<void> {
     this.setState('Loading');
 
     try {
@@ -26,12 +29,11 @@ export class SurvivalMode extends BaseGameMode {
     }
   }
 
-  async beginGame() {
-    // Для режима выживания сразу начинаем игру
+  async beginGame(): Promise<void> {
     await this.generateQuestion();
   }
 
-  resetGame() {
+  resetGame(): void {
     this.resetScore();
     this.state.currentQuestion = null;
     this.state.options = [];
@@ -41,17 +43,12 @@ export class SurvivalMode extends BaseGameMode {
     this.setState('Loading');
   }
 
-  async generateQuestion() {
+  async generateQuestion(): Promise<void> {
     try {
-      // Получаем случайную страну, избегая повторений
       const correctCountry = this.getRandomCountryAvoidingUsed();
-
-      // Получаем 3 неправильных варианта
       const wrongOptions = this.countriesAPI.getRandomCountries(3, correctCountry);
 
-      // Создаем массив вариантов и перемешиваем
       this.state.options = [correctCountry, ...wrongOptions].sort(() => Math.random() - 0.5);
-
       this.state.currentQuestion = correctCountry;
       this.state.correctAnswer = correctCountry;
       this.state.isAnswered = false;
@@ -63,7 +60,7 @@ export class SurvivalMode extends BaseGameMode {
     }
   }
 
-  answerQuestion(selectedCountry) {
+  answerQuestion(selectedCountry: Country): AnswerResult<Country> | null {
     if (this.state.isAnswered || !this.state.correctAnswer) {
       return null;
     }
@@ -77,11 +74,10 @@ export class SurvivalMode extends BaseGameMode {
       this.state.score.correct++;
     } else {
       this.state.score.incorrect++;
-      this.lives--; // Теряем жизнь за неправильный ответ
+      this.lives--;
     }
 
     this.setState('Result');
-    this.notifyListeners();
 
     return {
       isCorrect,
@@ -90,31 +86,29 @@ export class SurvivalMode extends BaseGameMode {
     };
   }
 
-  nextQuestion() {
-    // Если жизни закончились, игра окончена
+  nextQuestion(): boolean {
     if (this.lives <= 0) {
       this.setState('Idle');
       return false;
     }
 
-    // Генерируем новый вопрос (бесконечный режим)
-    this.generateQuestion();
+    void this.generateQuestion();
     return true;
   }
 
-  getLives() {
+  getLives(): number {
     return this.lives;
   }
 
-  getMaxLives() {
+  getMaxLives(): number {
     return this.maxLives;
   }
 
-  isGameFinished() {
+  isGameFinished(): boolean {
     return this.lives <= 0;
   }
 
-  getGameStats() {
+  getGameStats(): GameStats {
     return {
       score: this.getScore(),
       lives: this.lives,
