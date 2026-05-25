@@ -116,7 +116,7 @@ onUnmounted(clearTimer);
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin: var(--space-gap) auto 0;
+  margin: 0 auto var(--space-gap);
   box-sizing: border-box;
 }
 
@@ -246,7 +246,7 @@ onUnmounted(clearTimer);
     width: 100%;
     max-width: 100%;
     gap: 6px;
-    margin-top: 8px;
+    margin-bottom: 8px;
     padding: 0;
   }
 

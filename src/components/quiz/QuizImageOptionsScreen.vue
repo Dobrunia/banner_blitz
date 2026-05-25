@@ -35,6 +35,15 @@ const isResultPhase = computed(() => props.phase === 'result');
   <div class="quiz-image-options-screen">
     <main class="quiz-image-options-screen__main">
       <h2 class="quiz-image-options-screen__prompt">{{ question?.name || 'Какая страна?' }}</h2>
+
+      <QuizResultAdvance
+        v-if="phase === 'result'"
+        :key="question?.name"
+        :active="phase === 'result'"
+        :auto-countdown="usesAutoCountdown('flags')"
+        @next="$emit('next')"
+      />
+
       <div class="quiz-image-options-screen__grid">
         <button
           v-for="option in options"
@@ -53,14 +62,6 @@ const isResultPhase = computed(() => props.phase === 'result');
         </button>
       </div>
     </main>
-
-    <QuizResultAdvance
-      v-if="phase === 'result'"
-      :key="question?.name"
-      :active="phase === 'result'"
-      :auto-countdown="usesAutoCountdown('flags')"
-      @next="$emit('next')"
-    />
   </div>
 </template>
 

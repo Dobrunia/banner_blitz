@@ -30,6 +30,14 @@ const { answersVisible } = useAnswersVisibility(phase, showAnswerToggle);
 
 <template>
   <div class="quiz-answer-footer">
+    <QuizResultAdvance
+      v-if="phase === 'result'"
+      :key="questionKey ?? undefined"
+      :active="phase === 'result'"
+      :auto-countdown="autoCountdown"
+      @next="$emit('next')"
+    />
+
     <QuizTextOptions
       :options="options"
       :mode="mode"
@@ -37,14 +45,6 @@ const { answersVisible } = useAnswersVisibility(phase, showAnswerToggle);
       :result="result"
       :answers-visible="answersVisible"
       @answer="$emit('answer', $event)"
-    />
-
-    <QuizResultAdvance
-      v-if="phase === 'result'"
-      :key="questionKey ?? undefined"
-      :active="phase === 'result'"
-      :auto-countdown="autoCountdown"
-      @next="$emit('next')"
     />
 
     <QuizRevealAnswersButton
@@ -61,6 +61,7 @@ const { answersVisible } = useAnswersVisibility(phase, showAnswerToggle);
   width: 100%;
   flex-direction: column;
   align-items: center;
+  gap: var(--space-gap);
   box-sizing: border-box;
 }
 </style>
