@@ -76,7 +76,9 @@ const isArtMode = computed(() => props.mode === 'art-guess-artist');
   box-sizing: border-box;
   flex: 1;
   flex-direction: column;
-  gap: var(--space-block);
+  gap: var(--space-gap);
+  min-height: 0;
+  overflow: hidden;
   padding: 0 var(--space-block) var(--space-block);
 }
 
@@ -86,6 +88,11 @@ const isArtMode = computed(() => props.mode === 'art-guess-artist');
   flex: 1;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   text-align: center;
 }
 
@@ -102,10 +109,6 @@ const isArtMode = computed(() => props.mode === 'art-guess-artist');
 .quiz-question-screen--paused .quiz-question-screen__content {
   opacity: 0.5;
   filter: saturate(0.6);
-}
-
-.quiz-question-screen__main {
-  justify-content: center;
 }
 
 .quiz-question-screen__lives {
@@ -141,6 +144,7 @@ const isArtMode = computed(() => props.mode === 'art-guess-artist');
 .quiz-question-screen__footer {
   display: flex;
   width: 100%;
+  flex-shrink: 0;
   justify-content: center;
   box-sizing: border-box;
 }
@@ -148,12 +152,13 @@ const isArtMode = computed(() => props.mode === 'art-guess-artist');
 @media (max-width: 640px) {
   .quiz-question-screen {
     padding-inline: 10px;
-    padding-bottom: 10px;
+    gap: 8px;
   }
 
   .quiz-question-screen__main {
     align-items: center;
-    padding-top: var(--space-gap);
+    justify-content: flex-start;
+    padding-top: 4px;
   }
 
   .quiz-question-screen__content {
@@ -163,14 +168,13 @@ const isArtMode = computed(() => props.mode === 'art-guess-artist');
   .quiz-question-screen__prompt {
     width: auto;
     max-width: calc(100vw - 20px);
-    font-size: var(--font-md);
-    min-height: 2.5em;
+    min-height: 2.25em;
     text-align: center;
   }
 
   .quiz-question-screen__media {
-    width: min(calc(100vw - 20px), 320px);
-    height: 180px;
+    width: min(calc(100vw - 24px), 300px);
+    height: 150px;
     margin-inline: auto;
   }
 }
@@ -178,5 +182,12 @@ const isArtMode = computed(() => props.mode === 'art-guess-artist');
 .quiz-question-screen--art .quiz-question-screen__media {
   width: min(88vw, 420px);
   height: min(52vw, 280px);
+}
+
+@media (max-width: 640px) {
+  .quiz-question-screen--art .quiz-question-screen__media {
+    width: min(calc(100vw - 24px), 340px);
+    height: min(48vw, 200px);
+  }
 }
 </style>

@@ -12,7 +12,14 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-block);
-  min-height: 100vh;
+  flex: 1;
+  min-height: 0;
+}
+
+@media (max-width: 640px) {
+  .loading-screen {
+    font-size: var(--font-md);
+  }
 }
 
 .loading-spinner {

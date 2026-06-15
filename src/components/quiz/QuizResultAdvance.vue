@@ -245,36 +245,31 @@ onUnmounted(clearTimer);
   .quiz-result-advance {
     width: 100%;
     max-width: 100%;
-    gap: 6px;
-    margin-bottom: 8px;
+    gap: 8px;
+    margin-bottom: 4px;
     padding: 0;
   }
 
   .quiz-result-advance__fuse {
     min-width: 100px;
-    max-width: 140px;
-  }
-
-  .quiz-result-advance__count,
-  .quiz-result-advance__pause-label {
-    font-size: 11px;
+    max-width: 160px;
   }
 
   .quiz-result-advance__next {
-    min-height: 36px;
-    padding: 4px 10px;
-    font-size: 11px;
-  }
-
-  .quiz-result-advance--pause .quiz-result-advance__next {
-    min-height: 40px;
+    min-height: 44px;
+    padding: 8px 16px;
     font-size: var(--font-sm);
   }
 
+  .quiz-result-advance--pause .quiz-result-advance__next {
+    min-height: 48px;
+    font-size: var(--font-md);
+  }
+
   .quiz-result-advance__cancel {
-    width: 28px;
-    height: 28px;
-    font-size: 16px;
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
   }
 }
 

@@ -42,6 +42,8 @@ defineEmits<{
   flex: 1;
   flex-direction: column;
   gap: var(--space-block);
+  min-height: 0;
+  overflow: hidden;
   padding: 0 var(--space-block) var(--space-block);
 }
 
@@ -52,6 +54,10 @@ defineEmits<{
   align-items: center;
   justify-content: center;
   gap: var(--space-block);
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   text-align: center;
 }
 
@@ -102,6 +108,15 @@ defineEmits<{
 @media (max-width: 640px) {
   .game-screen {
     padding: var(--space-gap);
+  }
+
+  .game-main {
+    justify-content: flex-start;
+    padding-top: 8px;
+  }
+
+  .region-btn {
+    min-height: 48px;
   }
 }
 </style>

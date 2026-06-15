@@ -23,6 +23,7 @@ import WelcomeBackdrop from '../decor/WelcomeBackdrop.vue';
   display: flex;
   flex: 1;
   flex-direction: column;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -34,6 +35,10 @@ import WelcomeBackdrop from '../decor/WelcomeBackdrop.vue';
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: var(--space-block);
   text-align: center;
 }

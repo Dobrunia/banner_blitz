@@ -63,6 +63,7 @@ defineProps<{
 @media (max-width: 640px) {
   .quiz-session-header {
     display: flex;
+    flex-shrink: 0;
     justify-content: flex-end;
     padding: 6px 10px;
     padding-left: 48px;
@@ -83,9 +84,9 @@ defineProps<{
     max-width: calc(100vw - 58px);
     border-width: 1px;
     box-shadow: 0 2px 6px var(--shadow);
-    font-size: 11px;
+    font-size: var(--font-sm);
     font-weight: 600;
-    padding: 4px 10px;
+    padding: 6px 10px;
     text-align: center;
     white-space: nowrap;
   }

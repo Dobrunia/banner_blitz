@@ -18,3 +18,18 @@
   --z-burger: 1001;
   --z-modal: 10000;
 }
+
+@media (max-width: 640px) {
+  :root {
+    --font-sm: 14px;
+    --font-md: 17px;
+    --font-lg: 22px;
+
+    --space-inner: 10px;
+    --space-gap: 12px;
+    --space-block: 14px;
+
+    --safe-top: max(12px, env(safe-area-inset-top, 0px));
+    --safe-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  }
+}

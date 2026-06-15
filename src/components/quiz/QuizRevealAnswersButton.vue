@@ -59,13 +59,12 @@ function toggle(): void {
 
 @media (max-width: 640px) {
   .quiz-reveal-answers {
-    margin-top: 8px;
+    margin-top: 4px;
   }
 
   .quiz-reveal-answers__btn {
-    width: 42px;
-    height: 42px;
-    font-size: var(--font-sm);
+    width: 48px;
+    height: 48px;
   }
 }
 </style>

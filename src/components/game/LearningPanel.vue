@@ -72,4 +72,18 @@ defineEmits<{
   background: var(--bg-tertiary);
   box-shadow: 0 6px 20px var(--shadow);
 }
+
+@media (max-width: 640px) {
+  .learning-info {
+    padding: var(--space-gap);
+  }
+
+  .info-item {
+    font-size: var(--font-md);
+  }
+
+  .next-btn {
+    min-height: 48px;
+  }
+}
 </style>

@@ -73,6 +73,8 @@ const isResultPhase = computed(() => props.phase === 'result');
   flex: 1;
   flex-direction: column;
   gap: var(--space-gap);
+  min-height: 0;
+  overflow: hidden;
   padding: 0 var(--space-block) var(--space-block);
 }
 
@@ -83,7 +85,11 @@ const isResultPhase = computed(() => props.phase === 'result');
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-block);
+  gap: var(--space-gap);
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   text-align: center;
 }
 
@@ -170,11 +176,12 @@ const isResultPhase = computed(() => props.phase === 'result');
 
 @media (max-width: 640px) {
   .quiz-image-options-screen {
-    padding: 0 10px 10px;
+    padding: 0 10px var(--space-gap);
   }
 
-  .quiz-image-options-screen__prompt {
-    font-size: var(--font-md);
+  .quiz-image-options-screen__main {
+    justify-content: flex-start;
+    padding-top: 4px;
   }
 
   .quiz-image-options-screen__grid {
@@ -183,8 +190,12 @@ const isResultPhase = computed(() => props.phase === 'result');
   }
 
   .quiz-image-options-screen__option {
-    min-height: 110px;
+    min-height: 96px;
     padding: 8px;
+  }
+
+  .quiz-image-options-screen__image {
+    max-height: 80px;
   }
 }
 </style>

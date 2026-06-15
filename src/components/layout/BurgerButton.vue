@@ -37,11 +37,10 @@ defineEmits<{
 
 @media (max-width: 640px) {
   .burger-btn {
-    top: 8px;
-    left: 8px;
-    width: 40px;
-    height: 40px;
-    font-size: var(--font-sm);
+    top: var(--safe-top);
+    left: max(8px, env(safe-area-inset-left, 0px));
+    width: 44px;
+    height: 44px;
   }
 }
 </style>

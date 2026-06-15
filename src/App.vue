@@ -145,7 +145,8 @@ onUnmounted(() => {
   display: flex;
   flex: 1;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .main-content__view {
@@ -155,7 +156,7 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   min-height: 0;
-  overflow-x: hidden;
+  overflow: hidden;
   box-sizing: border-box;
 }
 
@@ -210,5 +211,13 @@ onUnmounted(() => {
   cursor: pointer;
   font-size: var(--font-md);
   font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+    box-sizing: border-box;
+  }
 }
 </style>

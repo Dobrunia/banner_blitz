@@ -163,13 +163,14 @@ const isDisabled = computed(() => answersLocked.value || isResultPhase.value);
   .quiz-text-options {
     width: 100%;
     max-width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
     padding: 0;
   }
 
   .quiz-text-options__btn {
-    min-height: 42px;
-    padding: 8px 10px;
+    min-height: 48px;
+    padding: 10px 8px;
     font-size: var(--font-sm);
   }
 }
